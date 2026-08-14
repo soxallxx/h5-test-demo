@@ -14,7 +14,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        html, body, #root { height: 100%; width: 100%; overflow: hidden; margin: 0; background: #0B0B10; color: white; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Helvetica, Arial, sans-serif; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        html, body, #root { height: 100%; min-height: -webkit-fill-available; width: 100%; overflow: hidden; margin: 0; background: #0B0B10; color: white; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Helvetica, Arial, sans-serif; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        @supports (height: 100svh) { html, body, #root { height: 100svh; } }
         @supports (height: 100dvh) { html, body, #root { height: 100dvh; } }
         ::-webkit-scrollbar { display: none; }
         .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -55,6 +56,16 @@
         const genres = ['Live Action', 'Animated', 'Urban', 'Counterattack', 'Romance', 'Mystery'];
         const titles = ['Test 8.5-1', 'Urban Legend', 'Counterattack', 'Romantic Dream', 'Animated World', 'Live Action Hero', 'New Dawn', 'The Last Stand'];
         const descs = ['A gripping tale of love and redemption.', 'When the world turns against you, fight back.', 'A heartwarming story about dreams.', 'In a world of magic and mystery.', 'The ultimate battle between good and evil.', 'A romantic comedy that will make you laugh.', 'Based on true events.', 'A thrilling mystery.'];
+        const dramaGenreSets = [
+            ['Romance', 'Urban', 'Counterattack'],
+            ['Live Action', 'Mystery', 'Urban'],
+            ['Animated', 'Romance', 'Revenge'],
+            ['Romance', 'CEO & Billionaire', 'Flash Marriage'],
+            ['Animated', 'Fantasy', 'Family'],
+            ['Live Action', 'Action', 'Counterattack'],
+            ['Romance', 'Rebirth', 'Second Chance'],
+            ['Mystery', 'Hidden Identity', 'Urban']
+        ];
 
         const generateCover = (id) => {
             const c = colors[id % colors.length];
@@ -64,17 +75,20 @@
         const visualStyle = (drama) => drama?.coverImage
             ? { backgroundImage: `linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.05)), url("${drama.coverImage}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
             : { background: drama?.heroCover || drama?.cover, backgroundSize: 'cover', backgroundPosition: 'center' };
+        const heroVisualStyle = (drama) => drama?.coverImage
+            ? { backgroundImage: `linear-gradient(to top, rgba(0,0,0,.74), rgba(0,0,0,.08)), url("${drama.coverImage}")`, backgroundSize: 'cover', backgroundPosition: 'center 34%' }
+            : { background: drama?.heroCover || drama?.cover, backgroundSize: 'cover', backgroundPosition: 'center' };
 
         const mockDramas = titles.map((title, index) => {
             const id = index + 1;
             const total = [45, 60, 40, 52, 36, 48, 55, 30][index % 8];
             const unlocked = Math.min(7, total);
-            const g = [...genres].sort(() => Math.random() - 0.5).slice(0, 2 + (index % 2));
+            const g = dramaGenreSets[index % dramaGenreSets.length];
             return {
                 id, title, genre: g, rating: 4 + Math.random() * 1.5, year: 2023 + (index % 3),
                 totalEpisodes: total, unlockedEpisodes: unlocked,
                 cover: generateCover(id), heroCover: generateCover(id + 10),
-                coverImage: index === 2 ? 'assets/drama-cover-counterattack.png' : null,
+                coverImage: 'assets/drama-cover-counterattack.png',
                 isLandscape: [1, 3, 6].includes(index),
                 description: descs[index % descs.length], isHot: index < 3, isNew: index > 5,
                 views: 100000 + Math.floor(Math.random() * 900000),
@@ -97,10 +111,193 @@
             { id: 'urban', label: 'Urban', icon: '🏙️' },
             { id: 'romance', label: 'Romance', icon: '❤️' },
         ];
+        const categoryGroups = [
+            { title: 'Genres', zhTitle: '题材类型', desc: 'Browse by story world', zhDesc: '按故事题材浏览', tags: ['Romance', 'Urban', 'Fantasy', 'Mystery', 'Action', 'Family'] },
+            { title: 'Power Hooks', zhTitle: '强爽点', desc: 'High-conversion short drama themes', zhDesc: '短剧常见高转化爽点', tags: ['Revenge', 'Counterattack', 'Rebirth', 'Hidden Identity', 'Second Chance'] },
+            { title: 'Relationships', zhTitle: '人物关系', desc: 'Character dynamics audiences recognize fast', zhDesc: '用户容易快速理解的人物关系', tags: ['CEO & Billionaire', 'Flash Marriage', 'Contract Love', 'Sweet Love'] },
+            { title: 'Format', zhTitle: '剧集形式', desc: 'How the episode feels', zhDesc: '按剧集形式和观看状态筛选', tags: ['Live Action', 'Animated', 'New Release', 'Hot Ranking', 'Paid Episodes'] },
+        ];
+        const membershipPlans = [
+            { id: 'weekly', days: 7, title: 'Weekly Pass', zhTitle: '周会员', price: '$9.99', amount: 9.99, badge: 'Short Access', zhBadge: '短期体验' },
+            { id: 'monthly', days: 30, title: 'Monthly Pass', zhTitle: '月会员', price: '$24.99', amount: 24.99, badge: 'Best Value', zhBadge: '重点推荐' },
+            { id: 'quarterly', days: 90, title: 'Quarterly Pass', zhTitle: '季度会员', price: '$59.99', amount: 59.99, badge: 'Save More', zhBadge: '更省' },
+            { id: 'yearly', days: 365, title: 'Yearly Pass', zhTitle: '年会员', price: '$159.99', amount: 159.99, badge: 'Biggest Saving', zhBadge: '最大优惠' }
+        ].map(plan => ({ ...plan, perDay: `$${(plan.amount / plan.days).toFixed(2)}/day`, zhPerDay: `约 $${(plan.amount / plan.days).toFixed(2)}/天` }));
+        const membershipLocales = {
+            en: { weekly: ['Weekly Pass', 'Short Access'], monthly: ['Monthly Pass', 'Best Value'], quarterly: ['Quarterly Pass', 'Save More'], yearly: ['Yearly Pass', 'Biggest Saving'] },
+            ar: { weekly: ['عضوية أسبوعية', 'وصول قصير'], monthly: ['عضوية شهرية', 'أفضل قيمة'], quarterly: ['عضوية ربع سنوية', 'وفر أكثر'], yearly: ['عضوية سنوية', 'أكبر توفير'] },
+            de: { weekly: ['Wochenpass', 'Kurzzeit-Zugang'], monthly: ['Monatspass', 'Bester Wert'], quarterly: ['Quartalspass', 'Mehr sparen'], yearly: ['Jahrespass', 'Größte Ersparnis'] },
+            es: { weekly: ['Pase semanal', 'Acceso corto'], monthly: ['Pase mensual', 'Mejor valor'], quarterly: ['Pase trimestral', 'Ahorra más'], yearly: ['Pase anual', 'Mayor ahorro'] },
+            fr: { weekly: ['Pass hebdomadaire', 'Accès court'], monthly: ['Pass mensuel', 'Meilleure offre'], quarterly: ['Pass trimestriel', 'Économisez plus'], yearly: ['Pass annuel', 'Plus grande économie'] },
+            id: { weekly: ['Paket Mingguan', 'Akses singkat'], monthly: ['Paket Bulanan', 'Nilai terbaik'], quarterly: ['Paket Kuartal', 'Lebih hemat'], yearly: ['Paket Tahunan', 'Paling hemat'] },
+            it: { weekly: ['Pass settimanale', 'Accesso breve'], monthly: ['Pass mensile', 'Miglior valore'], quarterly: ['Pass trimestrale', 'Risparmia di più'], yearly: ['Pass annuale', 'Massimo risparmio'] },
+            ja: { weekly: ['週間パス', '短期利用'], monthly: ['月間パス', '一番人気'], quarterly: ['3か月パス', 'さらにお得'], yearly: ['年間パス', '最大割引'] },
+            ko: { weekly: ['주간 패스', '단기 이용'], monthly: ['월간 패스', '최고 가치'], quarterly: ['분기 패스', '더 절약'], yearly: ['연간 패스', '최대 할인'] },
+            zh: { weekly: ['周会员', '短期体验'], monthly: ['月会员', '重点推荐'], quarterly: ['季度会员', '更省'], yearly: ['年会员', '最大优惠'] }
+        };
+        const membershipTitle = (plan, lang) => membershipLocales[lang]?.[plan.id]?.[0] || plan.title;
+        const membershipBadge = (plan, lang) => membershipLocales[lang]?.[plan.id]?.[1] || plan.badge;
+        const membershipPerDay = (plan, lang) => {
+            const value = `$${(plan.amount / plan.days).toFixed(2)}`;
+            if (lang === 'zh') return `约 ${value}/天`;
+            if (lang === 'ja') return `${value}/日`;
+            if (lang === 'ko') return `${value}/일`;
+            if (lang === 'ar') return `${value}/يوم`;
+            if (lang === 'de') return `${value}/Tag`;
+            if (lang === 'fr') return `${value}/jour`;
+            if (lang === 'es') return `${value}/día`;
+            if (lang === 'it') return `${value}/giorno`;
+            if (lang === 'id') return `${value}/hari`;
+            return `${value}/day`;
+        };
+        const coinPacks = [
+            { id: 'coins500', coins: 500, price: '$4.99' },
+            { id: 'coins1050', coins: 1050, price: '$9.99' },
+            { id: 'coins2200', coins: 2200, price: '$19.99' },
+            { id: 'coins5800', coins: 5800, price: '$49.99' },
+            { id: 'coins12000', coins: 12000, price: '$99.99' }
+        ];
+        const languageOptions = [
+            { code: 'en', name: 'English', short: 'EN' },
+            { code: 'ar', name: 'العربية', short: 'AR' },
+            { code: 'de', name: 'Deutsch', short: 'DE' },
+            { code: 'es', name: 'Español', short: 'ES' },
+            { code: 'fr', name: 'Français', short: 'FR' },
+            { code: 'id', name: 'Bahasa Indonesia', short: 'ID' },
+            { code: 'it', name: 'Italiano', short: 'IT' },
+            { code: 'ja', name: '日本語', short: '日本' },
+            { code: 'ko', name: '한국어', short: '한국' },
+            { code: 'zh', name: '中文', short: '中文' }
+        ];
+        const supportedLangs = ['en', 'ar', 'de', 'es', 'fr', 'id', 'it', 'ja', 'ko', 'zh'];
+        const langBase = (lang) => supportedLangs.includes(lang) ? lang : 'en';
+        const copy = {
+            en: {
+                allCategories: 'All Categories', reset: 'Reset', apply: 'Apply Filters', more: 'More Dramas',
+                categoryIntro: 'Categories are generated from the drama tags currently uploaded in this demo.',
+                watchFull: 'Watch Full Episode', eps: 'eps', filter: 'Filter', unlockTitle: 'Unlock Paid Episodes',
+                choosePayment: 'Choose Payment', episodeUnlock: 'Episode Unlock', membership: 'Membership', coinRecharge: 'Coins',
+                single: 'Single', bestValue: 'Best value', unlockFull: 'Unlock Full Drama', continue: 'Continue',
+                payNow: 'Pay Now', back: 'Back', success: 'Success', item: 'Item', total: 'Total',
+                payDesc: 'Choose a clean unlock option. Membership follows the confirmed 8.11 pricing table.',
+                dayNote: 'Auto-renewal. Cancel anytime.', coinsDesc: 'One-time coin package.'
+            },
+            ar: {
+                allCategories: 'كل التصنيفات', reset: 'إعادة ضبط', apply: 'تطبيق الفلاتر', more: 'المزيد من المسلسلات',
+                categoryIntro: 'تم إنشاء التصنيفات من وسوم المسلسلات المرفوعة حاليا.',
+                watchFull: 'مشاهدة الحلقة كاملة', eps: 'حلقة', filter: 'تصفية', unlockTitle: 'فتح الحلقات المدفوعة',
+                choosePayment: 'اختر طريقة الدفع', episodeUnlock: 'فتح الحلقات', membership: 'العضوية', coinRecharge: 'العملات',
+                single: 'حلقة واحدة', bestValue: 'أفضل قيمة', unlockFull: 'فتح المسلسل كاملا', continue: 'متابعة',
+                payNow: 'ادفع الآن', back: 'رجوع', success: 'تم الدفع', item: 'العنصر', total: 'الإجمالي',
+                payDesc: 'اضغط على أي بطاقة للمتابعة إلى الدفع.',
+                dayNote: 'تجديد تلقائي. يمكنك الإلغاء في أي وقت.', coinsDesc: 'باقة عملات لمرة واحدة.'
+            },
+            de: {
+                allCategories: 'Alle Kategorien', reset: 'Zurücksetzen', apply: 'Filter anwenden', more: 'Mehr Serien',
+                categoryIntro: 'Kategorien werden aus den Tags der hochgeladenen Serien erstellt.',
+                watchFull: 'Ganze Episode ansehen', eps: 'Folgen', filter: 'Filter', unlockTitle: 'Kostenpflichtige Folgen freischalten',
+                choosePayment: 'Zahlung wählen', episodeUnlock: 'Folgen freischalten', membership: 'Mitgliedschaft', coinRecharge: 'Münzen',
+                single: 'Einzeln', bestValue: 'Bester Wert', unlockFull: 'Ganze Serie freischalten', continue: 'Weiter',
+                payNow: 'Jetzt bezahlen', back: 'Zurück', success: 'Erfolgreich', item: 'Artikel', total: 'Summe',
+                payDesc: 'Tippe auf eine Karte, um direkt zur Zahlung zu gehen.',
+                dayNote: 'Automatische Verlängerung. Jederzeit kündbar.', coinsDesc: 'Einmaliges Münzpaket.'
+            },
+            es: {
+                allCategories: 'Todas las categorías', reset: 'Restablecer', apply: 'Aplicar filtros', more: 'Más dramas',
+                categoryIntro: 'Las categorías se generan con las etiquetas de los dramas subidos.',
+                watchFull: 'Ver episodio completo', eps: 'eps', filter: 'Filtrar', unlockTitle: 'Desbloquear episodios de pago',
+                choosePayment: 'Elegir pago', episodeUnlock: 'Desbloqueo', membership: 'Membresía', coinRecharge: 'Monedas',
+                single: 'Individual', bestValue: 'Mejor valor', unlockFull: 'Desbloquear drama completo', continue: 'Continuar',
+                payNow: 'Pagar ahora', back: 'Atrás', success: 'Éxito', item: 'Artículo', total: 'Total',
+                payDesc: 'Toca cualquier tarjeta para ir al pago.',
+                dayNote: 'Renovación automática. Cancela cuando quieras.', coinsDesc: 'Paquete único de monedas.'
+            },
+            fr: {
+                allCategories: 'Toutes les catégories', reset: 'Réinitialiser', apply: 'Appliquer', more: 'Plus de séries',
+                categoryIntro: 'Les catégories sont générées à partir des tags des séries importées.',
+                watchFull: 'Voir l’épisode complet', eps: 'éps', filter: 'Filtrer', unlockTitle: 'Débloquer les épisodes payants',
+                choosePayment: 'Choisir le paiement', episodeUnlock: 'Déblocage', membership: 'Abonnement', coinRecharge: 'Pièces',
+                single: 'Un épisode', bestValue: 'Meilleure offre', unlockFull: 'Débloquer toute la série', continue: 'Continuer',
+                payNow: 'Payer', back: 'Retour', success: 'Réussi', item: 'Article', total: 'Total',
+                payDesc: 'Touchez une carte pour passer au paiement.',
+                dayNote: 'Renouvellement automatique. Annulable à tout moment.', coinsDesc: 'Pack de pièces unique.'
+            },
+            id: {
+                allCategories: 'Semua Kategori', reset: 'Reset', apply: 'Terapkan Filter', more: 'Drama Lainnya',
+                categoryIntro: 'Kategori dibuat dari tag drama yang sudah diunggah.',
+                watchFull: 'Tonton Episode Penuh', eps: 'eps', filter: 'Filter', unlockTitle: 'Buka Episode Berbayar',
+                choosePayment: 'Pilih Pembayaran', episodeUnlock: 'Buka Episode', membership: 'Keanggotaan', coinRecharge: 'Koin',
+                single: 'Satuan', bestValue: 'Nilai terbaik', unlockFull: 'Buka Semua Drama', continue: 'Lanjut',
+                payNow: 'Bayar Sekarang', back: 'Kembali', success: 'Berhasil', item: 'Item', total: 'Total',
+                payDesc: 'Ketuk kartu mana pun untuk lanjut ke pembayaran.',
+                dayNote: 'Perpanjangan otomatis. Bisa dibatalkan kapan saja.', coinsDesc: 'Paket koin satu kali.'
+            },
+            it: {
+                allCategories: 'Tutte le categorie', reset: 'Ripristina', apply: 'Applica filtri', more: 'Altre serie',
+                categoryIntro: 'Le categorie sono generate dai tag delle serie caricate.',
+                watchFull: 'Guarda episodio completo', eps: 'eps', filter: 'Filtra', unlockTitle: 'Sblocca episodi a pagamento',
+                choosePayment: 'Scegli pagamento', episodeUnlock: 'Sblocco episodi', membership: 'Abbonamento', coinRecharge: 'Monete',
+                single: 'Singolo', bestValue: 'Miglior valore', unlockFull: 'Sblocca tutta la serie', continue: 'Continua',
+                payNow: 'Paga ora', back: 'Indietro', success: 'Successo', item: 'Articolo', total: 'Totale',
+                payDesc: 'Tocca una scheda per andare al pagamento.',
+                dayNote: 'Rinnovo automatico. Annulla quando vuoi.', coinsDesc: 'Pacchetto monete una tantum.'
+            },
+            ja: {
+                allCategories: 'すべてのカテゴリ', reset: 'リセット', apply: 'フィルター適用', more: 'もっと見る',
+                categoryIntro: 'カテゴリはアップロード済み作品のタグから生成されます。',
+                watchFull: '全話を見る', eps: '話', filter: '絞り込み', unlockTitle: '有料エピソードを解除',
+                choosePayment: '支払い方法を選択', episodeUnlock: 'エピソード解除', membership: 'メンバーシップ', coinRecharge: 'コイン',
+                single: '単話', bestValue: 'お得', unlockFull: '全話解除', continue: '続行',
+                payNow: '今すぐ支払う', back: '戻る', success: '成功', item: '項目', total: '合計',
+                payDesc: '任意のカードをタップして支払いへ進みます。',
+                dayNote: '自動更新。いつでもキャンセル可能。', coinsDesc: '一回限りのコインパック。'
+            },
+            ko: {
+                allCategories: '전체 카테고리', reset: '초기화', apply: '필터 적용', more: '더 많은 드라마',
+                categoryIntro: '카테고리는 업로드된 드라마 태그를 기준으로 생성됩니다.',
+                watchFull: '전체 에피소드 보기', eps: '화', filter: '필터', unlockTitle: '유료 에피소드 잠금 해제',
+                choosePayment: '결제 선택', episodeUnlock: '에피소드 잠금 해제', membership: '멤버십', coinRecharge: '코인',
+                single: '단일', bestValue: '최고 가치', unlockFull: '전체 드라마 잠금 해제', continue: '계속',
+                payNow: '지금 결제', back: '뒤로', success: '성공', item: '항목', total: '합계',
+                payDesc: '카드를 탭하면 바로 결제로 이동합니다.',
+                dayNote: '자동 갱신. 언제든 취소 가능.', coinsDesc: '일회성 코인 패키지.'
+            },
+            zh: {
+                allCategories: '全部分类', reset: '重置', apply: '应用筛选', more: '更多剧集',
+                categoryIntro: '分类根据当前已上传剧集的标签自动归纳，并在每个类别下展示对应剧集。',
+                watchFull: '观看全集', eps: '集', filter: '筛选', unlockTitle: '解锁付费剧集',
+                choosePayment: '选择支付方式', episodeUnlock: '剧集解锁', membership: '会员订阅', coinRecharge: '金币充值',
+                single: '单集', bestValue: '更划算', unlockFull: '解锁全集', continue: '继续',
+                payNow: '立即支付', back: '返回', success: '支付成功', item: '项目', total: '合计',
+                payDesc: '选择解锁方式。会员价格已按 8.11 表格确认方案配置。',
+                dayNote: '自动续费，可随时取消。', coinsDesc: '一次性金币包。'
+            }
+        };
+        const tagZh = {
+            'All': '全部', 'Romance': '爱情', 'Urban': '都市', 'Fantasy': '奇幻', 'Mystery': '悬疑',
+            'Action': '动作', 'Family': '家庭', 'Revenge': '复仇', 'Counterattack': '逆袭',
+            'Rebirth': '重生', 'Hidden Identity': '隐藏身份', 'Second Chance': '第二次机会',
+            'CEO & Billionaire': '霸总豪门', 'Flash Marriage': '闪婚', 'Contract Love': '契约爱情',
+            'Sweet Love': '甜宠', 'Live Action': '真人', 'Animated': '动画', 'New Release': '新剧',
+            'Hot Ranking': '热门榜', 'Paid Episodes': '付费剧集'
+        };
+        const tagTranslations = {
+            zh: tagZh,
+            ar: { 'All': 'الكل', 'Romance': 'رومانسي', 'Urban': 'حضري', 'Fantasy': 'خيال', 'Mystery': 'غموض', 'Action': 'أكشن', 'Family': 'عائلي', 'Revenge': 'انتقام', 'Counterattack': 'رد قوي', 'Rebirth': 'ولادة جديدة', 'Hidden Identity': 'هوية مخفية', 'Second Chance': 'فرصة ثانية', 'CEO & Billionaire': 'رئيس ثري', 'Flash Marriage': 'زواج سريع', 'Contract Love': 'حب بعقد', 'Sweet Love': 'حب لطيف', 'Live Action': 'تمثيل حي', 'Animated': 'رسوم', 'New Release': 'جديد', 'Hot Ranking': 'الأكثر رواجا', 'Paid Episodes': 'حلقات مدفوعة' },
+            de: { 'All': 'Alle', 'Romance': 'Romantik', 'Urban': 'Urban', 'Fantasy': 'Fantasy', 'Mystery': 'Mystery', 'Action': 'Action', 'Family': 'Familie', 'Revenge': 'Rache', 'Counterattack': 'Gegenschlag', 'Rebirth': 'Wiedergeburt', 'Hidden Identity': 'Geheime Identität', 'Second Chance': 'Zweite Chance', 'CEO & Billionaire': 'CEO & Milliardär', 'Flash Marriage': 'Blitzhochzeit', 'Contract Love': 'Vertragsliebe', 'Sweet Love': 'Süße Liebe', 'Live Action': 'Realfilm', 'Animated': 'Animation', 'New Release': 'Neu', 'Hot Ranking': 'Beliebt', 'Paid Episodes': 'Bezahlfolgen' },
+            es: { 'All': 'Todo', 'Romance': 'Romance', 'Urban': 'Urbano', 'Fantasy': 'Fantasía', 'Mystery': 'Misterio', 'Action': 'Acción', 'Family': 'Familia', 'Revenge': 'Venganza', 'Counterattack': 'Contraataque', 'Rebirth': 'Renacer', 'Hidden Identity': 'Identidad oculta', 'Second Chance': 'Segunda oportunidad', 'CEO & Billionaire': 'CEO y millonario', 'Flash Marriage': 'Matrimonio rápido', 'Contract Love': 'Amor por contrato', 'Sweet Love': 'Amor dulce', 'Live Action': 'Imagen real', 'Animated': 'Animado', 'New Release': 'Nuevo', 'Hot Ranking': 'Popular', 'Paid Episodes': 'Episodios de pago' },
+            fr: { 'All': 'Tout', 'Romance': 'Romance', 'Urban': 'Urbain', 'Fantasy': 'Fantasy', 'Mystery': 'Mystère', 'Action': 'Action', 'Family': 'Famille', 'Revenge': 'Vengeance', 'Counterattack': 'Contre-attaque', 'Rebirth': 'Renaissance', 'Hidden Identity': 'Identité cachée', 'Second Chance': 'Deuxième chance', 'CEO & Billionaire': 'PDG milliardaire', 'Flash Marriage': 'Mariage éclair', 'Contract Love': 'Amour contractuel', 'Sweet Love': 'Amour doux', 'Live Action': 'Prise de vue réelle', 'Animated': 'Animé', 'New Release': 'Nouveau', 'Hot Ranking': 'Populaire', 'Paid Episodes': 'Épisodes payants' },
+            id: { 'All': 'Semua', 'Romance': 'Romantis', 'Urban': 'Urban', 'Fantasy': 'Fantasi', 'Mystery': 'Misteri', 'Action': 'Aksi', 'Family': 'Keluarga', 'Revenge': 'Balas dendam', 'Counterattack': 'Serangan balik', 'Rebirth': 'Lahir kembali', 'Hidden Identity': 'Identitas tersembunyi', 'Second Chance': 'Kesempatan kedua', 'CEO & Billionaire': 'CEO & miliarder', 'Flash Marriage': 'Nikah kilat', 'Contract Love': 'Cinta kontrak', 'Sweet Love': 'Cinta manis', 'Live Action': 'Live Action', 'Animated': 'Animasi', 'New Release': 'Baru', 'Hot Ranking': 'Populer', 'Paid Episodes': 'Episode berbayar' },
+            it: { 'All': 'Tutto', 'Romance': 'Romantico', 'Urban': 'Urbano', 'Fantasy': 'Fantasy', 'Mystery': 'Mistero', 'Action': 'Azione', 'Family': 'Famiglia', 'Revenge': 'Vendetta', 'Counterattack': 'Contrattacco', 'Rebirth': 'Rinascita', 'Hidden Identity': 'Identità nascosta', 'Second Chance': 'Seconda possibilità', 'CEO & Billionaire': 'CEO e miliardario', 'Flash Marriage': 'Matrimonio lampo', 'Contract Love': 'Amore a contratto', 'Sweet Love': 'Dolce amore', 'Live Action': 'Live Action', 'Animated': 'Animato', 'New Release': 'Novità', 'Hot Ranking': 'Popolare', 'Paid Episodes': 'Episodi a pagamento' },
+            ja: { 'All': 'すべて', 'Romance': '恋愛', 'Urban': '都会', 'Fantasy': 'ファンタジー', 'Mystery': 'ミステリー', 'Action': 'アクション', 'Family': '家族', 'Revenge': '復讐', 'Counterattack': '逆転', 'Rebirth': '転生', 'Hidden Identity': '隠された身分', 'Second Chance': '二度目のチャンス', 'CEO & Billionaire': 'CEO・富豪', 'Flash Marriage': '電撃結婚', 'Contract Love': '契約恋愛', 'Sweet Love': '甘い恋', 'Live Action': '実写', 'Animated': 'アニメ', 'New Release': '新作', 'Hot Ranking': '人気ランキング', 'Paid Episodes': '有料エピソード' },
+            ko: { 'All': '전체', 'Romance': '로맨스', 'Urban': '도시', 'Fantasy': '판타지', 'Mystery': '미스터리', 'Action': '액션', 'Family': '가족', 'Revenge': '복수', 'Counterattack': '역습', 'Rebirth': '환생', 'Hidden Identity': '숨겨진 정체', 'Second Chance': '두 번째 기회', 'CEO & Billionaire': 'CEO 재벌', 'Flash Marriage': '초고속 결혼', 'Contract Love': '계약 연애', 'Sweet Love': '달콤한 사랑', 'Live Action': '실사', 'Animated': '애니메이션', 'New Release': '신작', 'Hot Ranking': '인기 순위', 'Paid Episodes': '유료 에피소드' }
+        };
+        const tagLabel = (tag, lang) => tagTranslations[langBase(lang)]?.[tag] || tag;
+        const genreLine = (drama, lang, count = 2) => drama.genre.slice(0, count).map(tag => tagLabel(tag, lang)).join(' · ');
         const shortcuts = [
-            { id: 'filter', label: 'Filter', icon: '🔍' },
-            { id: 'ranking', label: 'Ranking', icon: '🏆' },
-            { id: 'new-drama', label: 'New Drama', icon: '🌟' },
+            { id: 'filter', textKey: 'filter', icon: '🔍' },
+            { id: 'ranking', textKey: 'ranking', icon: '🏆' },
+            { id: 'new-drama', textKey: 'newDrama', icon: '🌟' },
         ];
 
         // ======================== 语言上下文 ========================
@@ -109,13 +306,49 @@
 
         const translations = {
             en: { 'nav.home': 'Home', 'nav.foryou': 'For You', 'nav.profile': 'Profile', 'search.placeholder': 'Search...', 'button.watch-now': 'Watch Now', 'button.view-all': 'View All', 'episode.unlocked': 'Unlocked', 'continue.watching': 'Continue Watching', 'search.hot': 'Hot Dramas', 'profile.wallet': 'Wallet', 'profile.favorites': 'Favorites', 'profile.playlist': 'Playlist', 'profile.history': 'History', 'profile.privacy': 'Privacy', 'drama.episodes': 'Episodes', 'drama.about': 'About' },
+            ar: { 'nav.home': 'الرئيسية', 'nav.foryou': 'لك', 'nav.profile': 'حسابي', 'search.placeholder': 'بحث...', 'button.watch-now': 'شاهد الآن', 'button.view-all': 'عرض الكل', 'episode.unlocked': 'مفتوح', 'continue.watching': 'متابعة المشاهدة', 'search.hot': 'الأكثر مشاهدة', 'profile.wallet': 'المحفظة', 'profile.favorites': 'المفضلة', 'profile.playlist': 'قائمة التشغيل', 'profile.history': 'السجل', 'profile.privacy': 'الخصوصية', 'drama.episodes': 'الحلقات', 'drama.about': 'حول' },
+            de: { 'nav.home': 'Start', 'nav.foryou': 'Für dich', 'nav.profile': 'Profil', 'search.placeholder': 'Suchen...', 'button.watch-now': 'Jetzt ansehen', 'button.view-all': 'Alle ansehen', 'episode.unlocked': 'Freigeschaltet', 'continue.watching': 'Weiterschauen', 'search.hot': 'Beliebte Serien', 'profile.wallet': 'Wallet', 'profile.favorites': 'Favoriten', 'profile.playlist': 'Playlist', 'profile.history': 'Verlauf', 'profile.privacy': 'Datenschutz', 'drama.episodes': 'Folgen', 'drama.about': 'Info' },
+            es: { 'nav.home': 'Inicio', 'nav.foryou': 'Para ti', 'nav.profile': 'Perfil', 'search.placeholder': 'Buscar...', 'button.watch-now': 'Ver ahora', 'button.view-all': 'Ver todo', 'episode.unlocked': 'Desbloqueado', 'continue.watching': 'Seguir viendo', 'search.hot': 'Dramas populares', 'profile.wallet': 'Cartera', 'profile.favorites': 'Favoritos', 'profile.playlist': 'Lista', 'profile.history': 'Historial', 'profile.privacy': 'Privacidad', 'drama.episodes': 'Episodios', 'drama.about': 'Acerca de' },
+            fr: { 'nav.home': 'Accueil', 'nav.foryou': 'Pour vous', 'nav.profile': 'Profil', 'search.placeholder': 'Rechercher...', 'button.watch-now': 'Regarder', 'button.view-all': 'Voir tout', 'episode.unlocked': 'Débloqué', 'continue.watching': 'Continuer', 'search.hot': 'Séries populaires', 'profile.wallet': 'Portefeuille', 'profile.favorites': 'Favoris', 'profile.playlist': 'Playlist', 'profile.history': 'Historique', 'profile.privacy': 'Confidentialité', 'drama.episodes': 'Épisodes', 'drama.about': 'À propos' },
+            id: { 'nav.home': 'Beranda', 'nav.foryou': 'Untukmu', 'nav.profile': 'Profil', 'search.placeholder': 'Cari...', 'button.watch-now': 'Tonton', 'button.view-all': 'Lihat semua', 'episode.unlocked': 'Terbuka', 'continue.watching': 'Lanjut menonton', 'search.hot': 'Drama populer', 'profile.wallet': 'Dompet', 'profile.favorites': 'Favorit', 'profile.playlist': 'Daftar putar', 'profile.history': 'Riwayat', 'profile.privacy': 'Privasi', 'drama.episodes': 'Episode', 'drama.about': 'Tentang' },
+            it: { 'nav.home': 'Home', 'nav.foryou': 'Per te', 'nav.profile': 'Profilo', 'search.placeholder': 'Cerca...', 'button.watch-now': 'Guarda ora', 'button.view-all': 'Vedi tutto', 'episode.unlocked': 'Sbloccato', 'continue.watching': 'Continua a guardare', 'search.hot': 'Serie popolari', 'profile.wallet': 'Portafoglio', 'profile.favorites': 'Preferiti', 'profile.playlist': 'Playlist', 'profile.history': 'Cronologia', 'profile.privacy': 'Privacy', 'drama.episodes': 'Episodi', 'drama.about': 'Info' },
+            ja: { 'nav.home': 'ホーム', 'nav.foryou': 'おすすめ', 'nav.profile': 'マイページ', 'search.placeholder': '検索...', 'button.watch-now': '今すぐ見る', 'button.view-all': 'すべて見る', 'episode.unlocked': '解除済み', 'continue.watching': '視聴を続ける', 'search.hot': '人気ドラマ', 'profile.wallet': 'ウォレット', 'profile.favorites': 'お気に入り', 'profile.playlist': 'プレイリスト', 'profile.history': '履歴', 'profile.privacy': 'プライバシー', 'drama.episodes': 'エピソード', 'drama.about': '概要' },
+            ko: { 'nav.home': '홈', 'nav.foryou': '추천', 'nav.profile': '내 정보', 'search.placeholder': '검색...', 'button.watch-now': '지금 보기', 'button.view-all': '전체 보기', 'episode.unlocked': '잠금 해제됨', 'continue.watching': '이어 보기', 'search.hot': '인기 드라마', 'profile.wallet': '지갑', 'profile.favorites': '즐겨찾기', 'profile.playlist': '재생목록', 'profile.history': '기록', 'profile.privacy': '개인정보', 'drama.episodes': '에피소드', 'drama.about': '소개' },
             zh: { 'nav.home': '首页', 'nav.foryou': '推荐', 'nav.profile': '我的', 'search.placeholder': '搜索...', 'button.watch-now': '立即观看', 'button.view-all': '查看全部', 'episode.unlocked': '已解锁', 'continue.watching': '继续观看', 'search.hot': '热门剧集', 'profile.wallet': '钱包', 'profile.favorites': '收藏', 'profile.playlist': '播放列表', 'profile.history': '历史', 'profile.privacy': '隐私', 'drama.episodes': '剧集', 'drama.about': '简介' }
         };
+        const uiText = {
+            en: { filter: 'Filter', ranking: 'Ranking', newDrama: 'New Drama', all: 'All', guest: 'Guest User', guestTip: 'Log in to sync history and wallet', vip: 'VIP', logout: 'Log out', loggedOut: 'Logged out.', loggedIn: 'Logged in.', registered: 'Registration complete.', membershipActive: 'Membership active', validUntil: 'Valid until Aug 19, 2026 15:46', renewMembership: 'Renew membership', myWallet: 'My Wallet', refill: 'Refill', totalRecharged: 'Total recharged', totalConsumed: 'Total consumed', recharges: 'Recharges', coinUsage: 'Coin usage', noRecharge: 'No recharge history yet.', noCoinUsage: 'No coin usage yet.', currentBalance: 'Current balance', chooseCoins: 'Choose Coins', vipAccess: 'VIP Access', premiumAccess: 'Watch all premium episodes', premiumAccessDesc: 'No episode locks, faster updates, and exclusive drama packs.', cardNumber: 'Card number', expiry: 'MM / YY', nameOnCard: 'Name on card', queue: 'Queue', watchedEp: 'Watched Ep', privacyExport: 'Export My Data', personalizedRecommendations: 'Personalized recommendations', emailNotifications: 'Email notifications', autoplayNext: 'Autoplay next episode', showWatchHistory: 'Show watch history' },
+            ar: { filter: 'تصفية', ranking: 'الترتيب', newDrama: 'مسلسل جديد', all: 'الكل', guest: 'زائر', guestTip: 'سجل الدخول لمزامنة السجل والمحفظة', vip: 'VIP', logout: 'تسجيل الخروج', loggedOut: 'تم تسجيل الخروج.', loggedIn: 'تم تسجيل الدخول.', registered: 'اكتمل التسجيل.', membershipActive: 'العضوية فعالة', validUntil: 'صالحة حتى 19 أغسطس 2026 15:46', renewMembership: 'تجديد العضوية', myWallet: 'محفظتي', refill: 'شحن', totalRecharged: 'إجمالي الشحن', totalConsumed: 'إجمالي الاستهلاك', recharges: 'عمليات الشحن', coinUsage: 'استخدام العملات', noRecharge: 'لا يوجد سجل شحن بعد.', noCoinUsage: 'لا يوجد استخدام عملات بعد.', currentBalance: 'الرصيد الحالي', chooseCoins: 'اختر العملات', vipAccess: 'مزايا VIP', premiumAccess: 'شاهد كل الحلقات المميزة', premiumAccessDesc: 'بدون قفل للحلقات وتحديثات أسرع وباقات حصرية.', cardNumber: 'رقم البطاقة', expiry: 'الشهر / السنة', nameOnCard: 'الاسم على البطاقة', queue: 'القائمة', watchedEp: 'تمت مشاهدة الحلقة', privacyExport: 'تصدير بياناتي', personalizedRecommendations: 'توصيات مخصصة', emailNotifications: 'إشعارات البريد', autoplayNext: 'تشغيل الحلقة التالية تلقائيا', showWatchHistory: 'إظهار سجل المشاهدة' },
+            de: { filter: 'Filter', ranking: 'Rangliste', newDrama: 'Neue Serie', all: 'Alle', guest: 'Gastnutzer', guestTip: 'Einloggen, um Verlauf und Wallet zu synchronisieren', vip: 'VIP', logout: 'Abmelden', loggedOut: 'Abgemeldet.', loggedIn: 'Angemeldet.', registered: 'Registrierung abgeschlossen.', membershipActive: 'Mitgliedschaft aktiv', validUntil: 'Gültig bis 19. Aug. 2026 15:46', renewMembership: 'Mitgliedschaft verlängern', myWallet: 'Mein Wallet', refill: 'Aufladen', totalRecharged: 'Insgesamt aufgeladen', totalConsumed: 'Insgesamt verbraucht', recharges: 'Aufladungen', coinUsage: 'Münzverbrauch', noRecharge: 'Noch keine Aufladungen.', noCoinUsage: 'Noch keine Münznutzung.', currentBalance: 'Aktuelles Guthaben', chooseCoins: 'Münzen wählen', vipAccess: 'VIP-Zugang', premiumAccess: 'Alle Premium-Folgen ansehen', premiumAccessDesc: 'Keine Sperren, schnellere Updates und exklusive Serienpakete.', cardNumber: 'Kartennummer', expiry: 'MM / JJ', nameOnCard: 'Name auf der Karte', queue: 'Warteschlange', watchedEp: 'Gesehen Folge', privacyExport: 'Meine Daten exportieren', personalizedRecommendations: 'Personalisierte Empfehlungen', emailNotifications: 'E-Mail-Benachrichtigungen', autoplayNext: 'Nächste Folge automatisch abspielen', showWatchHistory: 'Watch-Verlauf anzeigen' },
+            es: { filter: 'Filtrar', ranking: 'Ranking', newDrama: 'Nuevo drama', all: 'Todo', guest: 'Usuario invitado', guestTip: 'Inicia sesión para sincronizar historial y cartera', vip: 'VIP', logout: 'Cerrar sesión', loggedOut: 'Sesión cerrada.', loggedIn: 'Sesión iniciada.', registered: 'Registro completado.', membershipActive: 'Membresía activa', validUntil: 'Válida hasta 19 ago 2026 15:46', renewMembership: 'Renovar membresía', myWallet: 'Mi cartera', refill: 'Recargar', totalRecharged: 'Total recargado', totalConsumed: 'Total consumido', recharges: 'Recargas', coinUsage: 'Uso de monedas', noRecharge: 'Aún no hay recargas.', noCoinUsage: 'Aún no hay uso de monedas.', currentBalance: 'Saldo actual', chooseCoins: 'Elegir monedas', vipAccess: 'Acceso VIP', premiumAccess: 'Ver todos los episodios premium', premiumAccessDesc: 'Sin bloqueos, actualizaciones más rápidas y paquetes exclusivos.', cardNumber: 'Número de tarjeta', expiry: 'MM / AA', nameOnCard: 'Nombre en la tarjeta', queue: 'Cola', watchedEp: 'Visto Ep', privacyExport: 'Exportar mis datos', personalizedRecommendations: 'Recomendaciones personalizadas', emailNotifications: 'Notificaciones por email', autoplayNext: 'Reproducir siguiente episodio', showWatchHistory: 'Mostrar historial' },
+            fr: { filter: 'Filtrer', ranking: 'Classement', newDrama: 'Nouvelle série', all: 'Tout', guest: 'Utilisateur invité', guestTip: 'Connectez-vous pour synchroniser historique et portefeuille', vip: 'VIP', logout: 'Se déconnecter', loggedOut: 'Déconnecté.', loggedIn: 'Connecté.', registered: 'Inscription terminée.', membershipActive: 'Abonnement actif', validUntil: 'Valable jusqu’au 19 août 2026 15:46', renewMembership: 'Renouveler l’abonnement', myWallet: 'Mon portefeuille', refill: 'Recharger', totalRecharged: 'Total rechargé', totalConsumed: 'Total consommé', recharges: 'Recharges', coinUsage: 'Utilisation des pièces', noRecharge: 'Aucun historique de recharge.', noCoinUsage: 'Aucune utilisation de pièces.', currentBalance: 'Solde actuel', chooseCoins: 'Choisir des pièces', vipAccess: 'Accès VIP', premiumAccess: 'Regarder tous les épisodes premium', premiumAccessDesc: 'Aucun verrouillage, mises à jour plus rapides et packs exclusifs.', cardNumber: 'Numéro de carte', expiry: 'MM / AA', nameOnCard: 'Nom sur la carte', queue: 'File', watchedEp: 'Épisode vu', privacyExport: 'Exporter mes données', personalizedRecommendations: 'Recommandations personnalisées', emailNotifications: 'Notifications e-mail', autoplayNext: 'Lecture auto du prochain épisode', showWatchHistory: 'Afficher l’historique' },
+            id: { filter: 'Filter', ranking: 'Peringkat', newDrama: 'Drama Baru', all: 'Semua', guest: 'Pengguna Tamu', guestTip: 'Masuk untuk sinkronkan riwayat dan dompet', vip: 'VIP', logout: 'Keluar', loggedOut: 'Berhasil keluar.', loggedIn: 'Berhasil masuk.', registered: 'Pendaftaran selesai.', membershipActive: 'Keanggotaan aktif', validUntil: 'Berlaku hingga 19 Agu 2026 15:46', renewMembership: 'Perpanjang keanggotaan', myWallet: 'Dompet Saya', refill: 'Isi ulang', totalRecharged: 'Total diisi ulang', totalConsumed: 'Total dipakai', recharges: 'Isi ulang', coinUsage: 'Penggunaan koin', noRecharge: 'Belum ada riwayat isi ulang.', noCoinUsage: 'Belum ada penggunaan koin.', currentBalance: 'Saldo saat ini', chooseCoins: 'Pilih Koin', vipAccess: 'Akses VIP', premiumAccess: 'Tonton semua episode premium', premiumAccessDesc: 'Tanpa kunci episode, update lebih cepat, dan paket eksklusif.', cardNumber: 'Nomor kartu', expiry: 'BB / TT', nameOnCard: 'Nama pada kartu', queue: 'Antrean', watchedEp: 'Menonton Ep', privacyExport: 'Ekspor Data Saya', personalizedRecommendations: 'Rekomendasi personal', emailNotifications: 'Notifikasi email', autoplayNext: 'Putar episode berikutnya otomatis', showWatchHistory: 'Tampilkan riwayat' },
+            it: { filter: 'Filtra', ranking: 'Classifica', newDrama: 'Nuova serie', all: 'Tutto', guest: 'Utente ospite', guestTip: 'Accedi per sincronizzare cronologia e portafoglio', vip: 'VIP', logout: 'Esci', loggedOut: 'Disconnesso.', loggedIn: 'Accesso effettuato.', registered: 'Registrazione completata.', membershipActive: 'Abbonamento attivo', validUntil: 'Valido fino al 19 ago 2026 15:46', renewMembership: 'Rinnova abbonamento', myWallet: 'Il mio portafoglio', refill: 'Ricarica', totalRecharged: 'Totale ricaricato', totalConsumed: 'Totale consumato', recharges: 'Ricariche', coinUsage: 'Uso monete', noRecharge: 'Nessuna ricarica ancora.', noCoinUsage: 'Nessun uso monete.', currentBalance: 'Saldo attuale', chooseCoins: 'Scegli monete', vipAccess: 'Accesso VIP', premiumAccess: 'Guarda tutti gli episodi premium', premiumAccessDesc: 'Nessun blocco, aggiornamenti più rapidi e pacchetti esclusivi.', cardNumber: 'Numero carta', expiry: 'MM / AA', nameOnCard: 'Nome sulla carta', queue: 'Coda', watchedEp: 'Visto Ep', privacyExport: 'Esporta i miei dati', personalizedRecommendations: 'Consigli personalizzati', emailNotifications: 'Notifiche email', autoplayNext: 'Riproduci prossimo episodio', showWatchHistory: 'Mostra cronologia' },
+            ja: { filter: 'フィルター', ranking: 'ランキング', newDrama: '新作ドラマ', all: 'すべて', guest: 'ゲストユーザー', guestTip: 'ログインして履歴とウォレットを同期', vip: 'VIP', logout: 'ログアウト', loggedOut: 'ログアウトしました。', loggedIn: 'ログインしました。', registered: '登録が完了しました。', membershipActive: 'メンバーシップ有効', validUntil: '2026年8月19日 15:46まで有効', renewMembership: 'メンバーシップを更新', myWallet: 'マイウォレット', refill: 'チャージ', totalRecharged: '累計チャージ', totalConsumed: '累計消費', recharges: 'チャージ履歴', coinUsage: 'コイン使用', noRecharge: 'チャージ履歴はありません。', noCoinUsage: 'コイン使用履歴はありません。', currentBalance: '現在の残高', chooseCoins: 'コインを選択', vipAccess: 'VIP特典', premiumAccess: 'すべてのプレミアムエピソードを視聴', premiumAccessDesc: 'ロックなし、より速い更新、限定ドラマパック。', cardNumber: 'カード番号', expiry: '月 / 年', nameOnCard: 'カード名義', queue: 'キュー', watchedEp: '視聴済み 第', privacyExport: 'データをエクスポート', personalizedRecommendations: 'パーソナライズおすすめ', emailNotifications: 'メール通知', autoplayNext: '次のエピソードを自動再生', showWatchHistory: '視聴履歴を表示' },
+            ko: { filter: '필터', ranking: '랭킹', newDrama: '신작 드라마', all: '전체', guest: '게스트 사용자', guestTip: '로그인하면 기록과 지갑이 동기화됩니다', vip: 'VIP', logout: '로그아웃', loggedOut: '로그아웃되었습니다.', loggedIn: '로그인되었습니다.', registered: '가입이 완료되었습니다.', membershipActive: '멤버십 활성화', validUntil: '2026년 8월 19일 15:46까지 유효', renewMembership: '멤버십 갱신', myWallet: '내 지갑', refill: '충전', totalRecharged: '총 충전', totalConsumed: '총 사용', recharges: '충전 내역', coinUsage: '코인 사용', noRecharge: '아직 충전 내역이 없습니다.', noCoinUsage: '아직 코인 사용 내역이 없습니다.', currentBalance: '현재 잔액', chooseCoins: '코인 선택', vipAccess: 'VIP 혜택', premiumAccess: '모든 프리미엄 에피소드 시청', premiumAccessDesc: '잠금 없는 에피소드, 빠른 업데이트, 독점 패키지.', cardNumber: '카드 번호', expiry: '월 / 년', nameOnCard: '카드 명의', queue: '대기열', watchedEp: '시청한 Ep', privacyExport: '내 데이터 내보내기', personalizedRecommendations: '개인 맞춤 추천', emailNotifications: '이메일 알림', autoplayNext: '다음 에피소드 자동 재생', showWatchHistory: '시청 기록 표시' },
+            zh: { filter: '筛选', ranking: '排行榜', newDrama: '新剧', all: '全部', guest: '游客用户', guestTip: '登录后同步观看记录和资产', vip: 'VIP会员', logout: '退出账号', loggedOut: '已退出账号。', loggedIn: '登录成功。', registered: '注册成功。', membershipActive: '会员生效中', validUntil: '有效期至 2026年8月19日 15:46', renewMembership: '续费会员', myWallet: '账户资产', refill: '充值', totalRecharged: '累计充值', totalConsumed: '累计消耗', recharges: '充值记录', coinUsage: '金币使用', noRecharge: '暂无充值记录', noCoinUsage: '暂无金币使用记录', currentBalance: '当前余额', chooseCoins: '选择金币包', vipAccess: 'VIP 权益', premiumAccess: '畅看全部会员剧集', premiumAccessDesc: '无剧集锁定，更新更快，包含专属短剧包。', cardNumber: '卡号', expiry: '月 / 年', nameOnCard: '持卡人姓名', queue: '队列', watchedEp: '已观看第', privacyExport: '导出我的数据', personalizedRecommendations: '个性化推荐', emailNotifications: '邮件通知', autoplayNext: '自动播放下一集', showWatchHistory: '显示观看历史' }
+        };
+
+        const microText = {
+            en: { membershipCoins: 'Membership & Coins', choosePlanHint: 'Choose a membership or coin package. Tap any card to pay.', chooseUnlockHint: 'Tap any unlock, membership, or coin card to pay.', tapOption: 'Tap any option above to continue', weeklyFirst: 'Weekly first', cardPay: 'Credit / Debit Card', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: 'Quick checkout', paypalDetail: 'Pay with wallet balance', googleDetail: 'Fast mobile payment', recentActivity: 'Recent activity', unlockEp: 'Unlocked Ep 8', monthlyVip: 'Monthly VIP', paymentSubmitted: 'Payment submitted.', like: 'Like', saved: 'Saved', save: 'Save', shareOpened: 'Share panel opened.', share: 'Share', premium: 'premium', fullscreen: 'Fullscreen', hotReview: 'Hot review', language: 'Language', googleConnected: 'Google account connected.', forgot: 'Forgot password?', terms: 'By registering, you agree to our terms.', opened: 'Opened.' },
+            ar: { membershipCoins: 'العضوية والعملات', choosePlanHint: 'اختر عضوية أو حزمة عملات. اضغط على أي بطاقة للدفع.', chooseUnlockHint: 'اضغط على أي بطاقة فتح أو عضوية أو عملات للدفع.', tapOption: 'اضغط على أي خيار أعلاه للمتابعة', weeklyFirst: 'الأسبوعي أولا', cardPay: 'بطاقة ائتمان / خصم', cardDetail: 'فيزا، ماستركارد، أمريكان إكسبريس', appleDetail: 'دفع سريع', paypalDetail: 'الدفع من رصيد المحفظة', googleDetail: 'دفع سريع عبر الجوال', recentActivity: 'النشاط الأخير', unlockEp: 'فتح الحلقة 8', monthlyVip: 'عضوية شهرية VIP', paymentSubmitted: 'تم إرسال الدفع.', like: 'إعجاب', saved: 'محفوظ', save: 'حفظ', shareOpened: 'تم فتح لوحة المشاركة.', share: 'مشاركة', premium: 'مميز', fullscreen: 'ملء الشاشة', hotReview: 'تعليق شائع', language: 'اللغة', googleConnected: 'تم ربط حساب Google.', forgot: 'هل نسيت كلمة المرور؟', terms: 'بالتسجيل، أنت توافق على الشروط.', opened: 'تم الفتح.' },
+            de: { membershipCoins: 'Mitgliedschaft & Münzen', choosePlanHint: 'Wähle eine Mitgliedschaft oder ein Münzpaket. Tippe auf eine Karte zum Bezahlen.', chooseUnlockHint: 'Tippe auf eine Freischaltung, Mitgliedschaft oder Münzkarte zum Bezahlen.', tapOption: 'Tippe oben auf eine Option, um fortzufahren', weeklyFirst: 'Wöchentlich zuerst', cardPay: 'Kredit- / Debitkarte', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: 'Schneller Checkout', paypalDetail: 'Mit Wallet-Guthaben bezahlen', googleDetail: 'Schnelle mobile Zahlung', recentActivity: 'Letzte Aktivität', unlockEp: 'Folge 8 freigeschaltet', monthlyVip: 'Monats-VIP', paymentSubmitted: 'Zahlung gesendet.', like: 'Gefällt mir', saved: 'Gespeichert', save: 'Speichern', shareOpened: 'Teilen geöffnet.', share: 'Teilen', premium: 'Premium', fullscreen: 'Vollbild', hotReview: 'Top-Kommentar', language: 'Sprache', googleConnected: 'Google-Konto verbunden.', forgot: 'Passwort vergessen?', terms: 'Mit der Registrierung akzeptierst du die Bedingungen.', opened: 'Geöffnet.' },
+            es: { membershipCoins: 'Membresía y monedas', choosePlanHint: 'Elige una membresía o paquete de monedas. Toca una tarjeta para pagar.', chooseUnlockHint: 'Toca cualquier desbloqueo, membresía o paquete para pagar.', tapOption: 'Toca una opción de arriba para continuar', weeklyFirst: 'Semanal primero', cardPay: 'Tarjeta crédito / débito', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: 'Pago rápido', paypalDetail: 'Pagar con saldo de cartera', googleDetail: 'Pago móvil rápido', recentActivity: 'Actividad reciente', unlockEp: 'Ep 8 desbloqueado', monthlyVip: 'VIP mensual', paymentSubmitted: 'Pago enviado.', like: 'Me gusta', saved: 'Guardado', save: 'Guardar', shareOpened: 'Panel de compartir abierto.', share: 'Compartir', premium: 'premium', fullscreen: 'Pantalla completa', hotReview: 'Comentario popular', language: 'Idioma', googleConnected: 'Cuenta de Google conectada.', forgot: '¿Olvidaste tu contraseña?', terms: 'Al registrarte, aceptas los términos.', opened: 'Abierto.' },
+            fr: { membershipCoins: 'Abonnement et pièces', choosePlanHint: 'Choisissez un abonnement ou un pack de pièces. Touchez une carte pour payer.', chooseUnlockHint: 'Touchez une carte de déblocage, abonnement ou pièces pour payer.', tapOption: 'Touchez une option ci-dessus pour continuer', weeklyFirst: 'Hebdomadaire en premier', cardPay: 'Carte bancaire', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: 'Paiement rapide', paypalDetail: 'Payer avec le solde du portefeuille', googleDetail: 'Paiement mobile rapide', recentActivity: 'Activité récente', unlockEp: 'Ép. 8 débloqué', monthlyVip: 'VIP mensuel', paymentSubmitted: 'Paiement envoyé.', like: 'J’aime', saved: 'Enregistré', save: 'Enregistrer', shareOpened: 'Panneau de partage ouvert.', share: 'Partager', premium: 'premium', fullscreen: 'Plein écran', hotReview: 'Avis populaire', language: 'Langue', googleConnected: 'Compte Google connecté.', forgot: 'Mot de passe oublié ?', terms: 'En vous inscrivant, vous acceptez les conditions.', opened: 'Ouvert.' },
+            id: { membershipCoins: 'Keanggotaan & Koin', choosePlanHint: 'Pilih keanggotaan atau paket koin. Ketuk kartu untuk membayar.', chooseUnlockHint: 'Ketuk kartu buka kunci, keanggotaan, atau koin untuk membayar.', tapOption: 'Ketuk opsi di atas untuk lanjut', weeklyFirst: 'Mingguan dulu', cardPay: 'Kartu kredit / debit', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: 'Checkout cepat', paypalDetail: 'Bayar dengan saldo dompet', googleDetail: 'Pembayaran seluler cepat', recentActivity: 'Aktivitas terbaru', unlockEp: 'Ep 8 terbuka', monthlyVip: 'VIP bulanan', paymentSubmitted: 'Pembayaran dikirim.', like: 'Suka', saved: 'Tersimpan', save: 'Simpan', shareOpened: 'Panel berbagi dibuka.', share: 'Bagikan', premium: 'premium', fullscreen: 'Layar penuh', hotReview: 'Ulasan populer', language: 'Bahasa', googleConnected: 'Akun Google terhubung.', forgot: 'Lupa kata sandi?', terms: 'Dengan mendaftar, Anda menyetujui ketentuan.', opened: 'Dibuka.' },
+            it: { membershipCoins: 'Abbonamento e monete', choosePlanHint: 'Scegli un abbonamento o pacchetto monete. Tocca una scheda per pagare.', chooseUnlockHint: 'Tocca sblocco, abbonamento o monete per pagare.', tapOption: 'Tocca un’opzione sopra per continuare', weeklyFirst: 'Settimanale prima', cardPay: 'Carta credito / debito', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: 'Pagamento rapido', paypalDetail: 'Paga con saldo portafoglio', googleDetail: 'Pagamento mobile rapido', recentActivity: 'Attività recente', unlockEp: 'Ep 8 sbloccato', monthlyVip: 'VIP mensile', paymentSubmitted: 'Pagamento inviato.', like: 'Mi piace', saved: 'Salvato', save: 'Salva', shareOpened: 'Pannello condivisione aperto.', share: 'Condividi', premium: 'premium', fullscreen: 'Schermo intero', hotReview: 'Recensione popolare', language: 'Lingua', googleConnected: 'Account Google collegato.', forgot: 'Password dimenticata?', terms: 'Registrandoti accetti i termini.', opened: 'Aperto.' },
+            ja: { membershipCoins: 'メンバーシップとコイン', choosePlanHint: 'メンバーシップまたはコインパックを選び、カードをタップして支払いへ進みます。', chooseUnlockHint: '解除、メンバーシップ、コインのカードをタップして支払いへ進みます。', tapOption: '上のオプションをタップして続行', weeklyFirst: '週間パスを先頭表示', cardPay: 'クレジット / デビットカード', cardDetail: 'Visa、Mastercard、AmEx', appleDetail: 'クイック決済', paypalDetail: 'ウォレット残高で支払い', googleDetail: '高速モバイル決済', recentActivity: '最近の履歴', unlockEp: '第8話を解除', monthlyVip: '月間VIP', paymentSubmitted: '支払いを送信しました。', like: 'いいね', saved: '保存済み', save: '保存', shareOpened: '共有パネルを開きました。', share: '共有', premium: 'プレミアム', fullscreen: '全画面', hotReview: '人気コメント', language: '言語', googleConnected: 'Googleアカウントを連携しました。', forgot: 'パスワードをお忘れですか？', terms: '登録すると利用規約に同意したことになります。', opened: '開きました。' },
+            ko: { membershipCoins: '멤버십 및 코인', choosePlanHint: '멤버십 또는 코인 패키지를 선택하세요. 카드를 누르면 결제로 이동합니다.', chooseUnlockHint: '잠금 해제, 멤버십 또는 코인 카드를 누르면 결제로 이동합니다.', tapOption: '위 옵션을 눌러 계속하세요', weeklyFirst: '주간 패스 우선', cardPay: '신용 / 체크카드', cardDetail: 'Visa, Mastercard, AmEx', appleDetail: '빠른 결제', paypalDetail: '지갑 잔액으로 결제', googleDetail: '빠른 모바일 결제', recentActivity: '최근 활동', unlockEp: '8화 잠금 해제', monthlyVip: '월간 VIP', paymentSubmitted: '결제가 제출되었습니다.', like: '좋아요', saved: '저장됨', save: '저장', shareOpened: '공유 패널이 열렸습니다.', share: '공유', premium: '프리미엄', fullscreen: '전체 화면', hotReview: '인기 리뷰', language: '언어', googleConnected: 'Google 계정이 연결되었습니다.', forgot: '비밀번호를 잊으셨나요?', terms: '가입하면 약관에 동의하게 됩니다.', opened: '열렸습니다.' },
+            zh: { membershipCoins: '会员与金币', choosePlanHint: '选择会员套餐或金币包，点击任意卡片直接进入支付。', chooseUnlockHint: '点击任意解锁、会员或金币卡片直接进入支付。', tapOption: '点击上方任意套餐继续支付', weeklyFirst: '周会员优先展示', cardPay: '信用卡 / 借记卡', cardDetail: 'Visa、Mastercard、AmEx', appleDetail: '快速支付', paypalDetail: '使用钱包余额支付', googleDetail: '快捷移动支付', recentActivity: '近期记录', unlockEp: '解锁第 8 集', monthlyVip: '月会员', paymentSubmitted: '支付已提交。', like: '点赞', saved: '已收藏', save: '收藏', shareOpened: '分享面板已打开。', share: '分享', premium: '会员内容', fullscreen: '全屏观看', hotReview: '热评', language: '语言', googleConnected: 'Google 账号已连接。', forgot: '忘记密码？', terms: '注册即表示同意服务条款。', opened: '已打开。' }
+        };
+
+        const mText = (lang, key) => (microText[lang] || microText.en)[key] || microText.en[key] || key;
 
         function LangProvider({ children }) {
             const [lang, setLang] = useState('en');
-            const t = (key) => translations[lang]?.[key] || key;
-            return React.createElement(LangContext.Provider, { value: { lang, setLang, t } }, children);
+            const baseLang = langBase(lang);
+            const t = (key) => translations[baseLang]?.[key] || translations.en?.[key] || key;
+            return React.createElement(LangContext.Provider, { value: { lang, baseLang, setLang, t } }, children);
         }
 
         // ======================== 底部导航 ========================
@@ -146,6 +379,7 @@
 
         // ======================== Hero 轮播 ========================
         function HeroCarousel({ dramas, onClick }) {
+            const { t, lang, baseLang } = useLang();
             const [idx, setIdx] = useState(0);
             useEffect(() => {
                 const i = setInterval(() => setIdx(p => (p + 1) % dramas.length), 4000);
@@ -154,17 +388,17 @@
             if (!dramas.length) return null;
             const d = dramas[idx];
             return React.createElement('div', { className: 'px-4 pt-2 pb-1 relative' },
-                React.createElement('div', { className: 'hero-slide cursor-pointer', onClick: () => onClick(d), style: visualStyle(d) },
+                React.createElement('div', { className: 'hero-slide cursor-pointer', onClick: () => onClick(d), style: heroVisualStyle(d) },
                     React.createElement('div', { className: 'absolute inset-0 bg-gradient-to-t from-[#0B0B10]/90 via-transparent to-transparent' }),
                     React.createElement('div', { className: 'absolute bottom-0 left-0 right-0 p-4' },
                         React.createElement('div', { className: 'flex items-center gap-2 mb-1' },
                             d.isHot && React.createElement('span', { className: 'px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full' }, 'HOT'),
                             React.createElement('span', { className: 'text-xs text-white/60' }, `⭐ ${d.rating.toFixed(1)}`)),
                         React.createElement('h2', { className: 'text-lg font-bold text-white truncate' }, d.title),
-                        React.createElement('p', { className: 'text-xs text-white/60 mb-2' }, `${d.genre.join(' · ')} · ${d.totalEpisodes} eps`),
+                        React.createElement('p', { className: 'text-xs text-white/60 mb-2' }, `${genreLine(d, lang, d.genre.length)} · ${d.totalEpisodes} ${copy[baseLang].eps}`),
                         React.createElement('div', { className: 'flex gap-2' },
-                            React.createElement('button', { className: 'btn-primary text-xs flex items-center gap-1', onClick: (e) => { e.stopPropagation(); onClick(d); } }, '▶ Watch Now'),
-                            React.createElement('button', { className: 'btn-secondary text-xs', onClick: (e) => { e.stopPropagation(); onClick(d); } }, 'View All'))
+                            React.createElement('button', { className: 'btn-primary text-xs flex items-center gap-1', onClick: (e) => { e.stopPropagation(); onClick(d); } }, `▶ ${t('button.watch-now')}`),
+                            React.createElement('button', { className: 'btn-secondary text-xs', onClick: (e) => { e.stopPropagation(); onClick(d); } }, t('button.view-all')))
                     ),
                     React.createElement('div', { className: 'absolute top-3 right-3 flex gap-1.5' },
                         dramas.map((_, i) => React.createElement('div', { key: i, className: `transition-all duration-300 rounded-full ${i === idx ? 'w-5 h-1.5 bg-indigo-400' : 'w-1.5 h-1.5 bg-white/30'}` }))
@@ -175,6 +409,9 @@
 
         // ======================== 剧集卡片 ========================
         function DramaCard({ drama, onClick, size = 'medium', showProgress = false }) {
+            const { lang, baseLang } = useLang();
+            const c = copy[baseLang];
+            const mt = (key) => mText(baseLang, key);
             const w = size === 'small' ? 'w-[120px]' : size === 'large' ? 'w-[200px]' : 'w-full';
             const prog = showProgress ? (drama.unlockedEpisodes / drama.totalEpisodes) * 100 : 0;
             return React.createElement('div', { className: `drama-card ${w} flex-shrink-0 cursor-pointer`, onClick: () => onClick(drama) },
@@ -183,7 +420,7 @@
                         React.createElement('div', { className: 'absolute top-2 left-2 flex flex-col gap-1' },
                             drama.isHot && React.createElement('span', { className: 'px-1.5 py-0.5 text-[8px] font-bold bg-gradient-to-r from-indigo-500 to-purple-600 rounded' }, 'HOT')
                         ),
-                        React.createElement('div', { className: 'absolute bottom-2 right-2 px-1.5 py-0.5 text-[9px] font-medium bg-black/60 backdrop-blur-sm rounded' }, `${drama.totalEpisodes} eps`),
+                        React.createElement('div', { className: 'absolute bottom-2 right-2 px-1.5 py-0.5 text-[9px] font-medium bg-black/60 backdrop-blur-sm rounded' }, `${drama.totalEpisodes} ${c.eps}`),
                         showProgress && React.createElement('div', { className: 'absolute bottom-0 left-0 right-0 h-1 bg-white/10' },
                             React.createElement('div', { className: 'h-full bg-gradient-to-r from-indigo-400 to-purple-500 transition-all', style: { width: `${prog}%` } })
                         )
@@ -192,7 +429,7 @@
                 React.createElement('div', { className: 'p-2.5' },
                     React.createElement('h3', { className: 'text-sm font-semibold text-white truncate' }, drama.title),
                     React.createElement('div', { className: 'flex justify-between text-[10px] text-white/40' },
-                        React.createElement('span', { className: 'truncate' }, drama.genre.slice(0, 2).join(' · ')),
+                        React.createElement('span', { className: 'truncate' }, genreLine(drama, lang)),
                         React.createElement('span', null, `⭐ ${drama.rating.toFixed(1)}`)
                     )
                 )
@@ -201,10 +438,11 @@
 
         // ======================== ForYou 页面（核心优化） ========================
         function ForYouPage({ onDramaClick, onPurchaseClick }) {
+            const { lang, baseLang } = useLang();
+            const c = copy[baseLang];
             const [currentIndex, setCurrentIndex] = useState(0);
             const [isPlaying, setIsPlaying] = useState(true);
             const [isLiked, setIsLiked] = useState(false);
-            const [isFavorited, setIsFavorited] = useState(false);
             const [speed, setSpeed] = useState(1);
             const [showPlayerTools, setShowPlayerTools] = useState(true);
             const [feedProgress, setFeedProgress] = useState(12);
@@ -310,30 +548,32 @@
                                 )
                             )
                         ),
-                        // 左下角剧集名（字体缩小）
-                        index === currentIndex && React.createElement('div', { className: 'absolute bottom-12 left-3 right-14 z-10 pointer-events-none' },
-                            React.createElement('h2', { className: 'text-[11px] font-semibold text-white/90 drop-shadow-lg line-clamp-1' }, drama.title),
-                            React.createElement('p', { className: 'text-[10px] text-white/55 drop-shadow-md line-clamp-1' }, `${drama.genre.slice(0, 2).join(' · ')} · ${drama.totalEpisodes} eps`)
+                        index === currentIndex && React.createElement('div', { className: 'absolute left-3 right-20 bottom-[118px] z-20' },
+                            React.createElement('button', {
+                                onClick: (e) => { e.stopPropagation(); onDramaClick({ ...drama, resumeProgress: feedProgress, resumeEpisode: Math.max(1, Math.min(drama.unlockedEpisodes, Math.ceil((feedProgress / 100) * drama.unlockedEpisodes))) }); },
+                                className: 'w-full flex items-center gap-3 rounded-2xl bg-black/38 backdrop-blur-md border border-white/10 p-3 shadow-lg active:scale-[0.98] transition-all text-left'
+                            },
+                                React.createElement('div', { className: 'w-16 h-20 rounded-xl flex-shrink-0 bg-white/10 overflow-hidden', style: drama.coverImage ? { backgroundImage: `url("${drama.coverImage}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: drama.cover } }),
+                                React.createElement('div', { className: 'min-w-0 flex-1' },
+                                    React.createElement('p', { className: 'text-base font-extrabold text-white truncate' }, drama.title),
+                                    React.createElement('p', { className: 'text-[11px] text-white/65 mt-1 truncate' }, `${genreLine(drama, lang)} · ${drama.totalEpisodes} ${c.eps}`),
+                                    React.createElement('span', { className: 'inline-flex mt-2 px-4 py-2 rounded-full bg-pink-600 text-xs font-extrabold text-white shadow-lg shadow-pink-600/30' }, `▶ ${c.watchFull}`)
+                                )
+                            )
                         ),
-                        index === currentIndex && drama.unlockedEpisodes < drama.totalEpisodes && React.createElement('button', {
-                            onClick: (e) => { e.stopPropagation(); onPurchaseClick({ drama, episode: drama.episodes[drama.unlockedEpisodes] }); },
-                            className: 'absolute left-3 bottom-[92px] z-20 px-4 py-2 rounded-full bg-pink-600/90 backdrop-blur-sm text-xs font-bold text-white shadow-lg shadow-pink-600/30 active:scale-95 transition-all'
-                        }, `▶ Watch Full Episode`),
-                        // 右侧小按钮组（收藏、点赞、分享、倍速）
-                        index === currentIndex && React.createElement('div', { className: 'absolute right-3 bottom-32 z-10 flex flex-col items-center gap-4' },
-                            React.createElement('button', { onClick: (e) => { e.stopPropagation(); setIsLiked(!isLiked); }, className: 'flex flex-col items-center gap-0.5 text-white active:scale-90 transition-all' }, React.createElement('span', { className: 'text-3xl leading-none drop-shadow-lg' }, isLiked ? '♥' : '♡'), React.createElement('span', { className: 'text-[10px] text-white/75' }, isLiked ? '1.6万' : '0')),
-                            React.createElement('button', { onClick: (e) => { e.stopPropagation(); setIsFavorited(!isFavorited); }, className: 'flex flex-col items-center gap-0.5 text-white active:scale-90 transition-all' }, React.createElement('span', { className: 'text-3xl leading-none drop-shadow-lg' }, isFavorited ? '★' : '☆'), React.createElement('span', { className: 'text-[10px] text-white/75' }, isFavorited ? 'Saved' : '0')),
-                            React.createElement('button', { onClick: (e) => { e.stopPropagation(); alert('Share panel opened.'); }, className: 'flex flex-col items-center gap-0.5 text-white active:scale-90 transition-all' }, React.createElement('span', { className: 'text-3xl leading-none drop-shadow-lg' }, '↗'), React.createElement('span', { className: 'text-[10px] text-white/75' }, 'Share')),
-                            React.createElement('button', { onClick: handleSpeed, className: 'px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm text-[10px] font-semibold text-white active:scale-90 transition-all' }, `${speed}x`)
+                        // 右侧精简按钮组（点赞、倍速）
+                        index === currentIndex && React.createElement('div', { className: 'absolute right-3 top-[43%] z-10 flex flex-col items-center gap-6' },
+                            React.createElement('button', { onClick: (e) => { e.stopPropagation(); setIsLiked(!isLiked); }, className: 'flex flex-col items-center gap-0.5 text-white active:scale-90 transition-all' }, React.createElement('span', { className: 'text-5xl leading-none drop-shadow-lg' }, isLiked ? '♥' : '♡'), React.createElement('span', { className: 'text-xs text-white/80' }, isLiked ? '1.6万' : '0')),
+                            React.createElement('button', { onClick: handleSpeed, className: 'min-w-14 px-4 py-3 rounded-full bg-black/55 backdrop-blur-sm text-base font-extrabold text-white active:scale-90 transition-all shadow-lg' }, `${speed}x`)
                         )
                     )
                 )),
-                showPlayerTools && React.createElement('div', { className: 'absolute left-3 right-3 bottom-11 z-20' },
+                showPlayerTools && React.createElement('div', { className: 'absolute left-3 right-3 bottom-10 z-20' },
                     React.createElement('input', { type: 'range', min: '0', max: '100', value: feedProgress, onChange: (e) => setFeedProgress(Number(e.target.value)), onClick: (e) => e.stopPropagation(), className: 'w-full accent-pink-500' }),
                     React.createElement('div', { className: 'flex items-center justify-between text-xs text-white/70 mt-1' },
                         React.createElement('button', { onClick: (e) => { e.stopPropagation(); setIsPlaying(p => !p); }, className: 'text-2xl text-white' }, isPlaying ? 'Ⅱ' : '▶'),
                         React.createElement('span', null, `0:${String(Math.floor(feedProgress * 0.3)).padStart(2, '0')} / 0:30`),
-                        React.createElement('button', { onClick: handleSpeed, className: 'text-white/80' }, '倍速')
+                        React.createElement('button', { onClick: handleSpeed, className: 'px-3 py-1.5 rounded-full bg-white/10 text-white text-sm font-semibold' }, baseLang === 'zh' ? '倍速' : 'Speed')
                     )
                 ),
                 // 右侧进度点
@@ -347,38 +587,98 @@
 
         // ======================== 首页 ========================
         function HomePage({ onDramaClick }) {
-            const { t } = useLang();
+            const { t, lang, baseLang } = useLang();
             const [cat, setCat] = useState('all');
+            const [categoryOpen, setCategoryOpen] = useState(false);
+            const [selectedTags, setSelectedTags] = useState(['All']);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [hasSearched, setHasSearched] = useState(false);
+            const u = uiText[baseLang];
+            const searchText = {
+                en: { search: 'Search', results: 'Search Results', noExact: 'No exact match. Similar dramas for you', clear: 'Clear' },
+                zh: { search: '搜索', results: '搜索结果', noExact: '未找到完全匹配，推荐类似剧集', clear: '清除' },
+                ja: { search: '検索', results: '検索結果', noExact: '完全一致はありません。似た作品をおすすめします', clear: 'クリア' },
+                ko: { search: '검색', results: '검색 결과', noExact: '정확한 결과가 없습니다. 비슷한 드라마를 추천합니다', clear: '지우기' }
+            }[baseLang] || { search: copy[baseLang].filter, results: t('search.hot'), noExact: 'No exact match. Similar dramas for you', clear: 'Clear' };
+            const normalizedQuery = searchQuery.trim().toLowerCase();
+            const matchesSearch = (drama) => {
+                if (!normalizedQuery) return false;
+                const fields = [
+                    drama.title,
+                    drama.description,
+                    ...drama.genre,
+                    ...drama.genre.map(tag => tagLabel(tag, lang))
+                ].join(' ').toLowerCase();
+                return fields.includes(normalizedQuery);
+            };
+            const searchResults = normalizedQuery ? mockDramas.filter(matchesSearch) : [];
+            const similarResults = normalizedQuery
+                ? [...mockDramas].map((drama) => {
+                    const haystack = `${drama.title} ${drama.description} ${drama.genre.join(' ')} ${drama.genre.map(tag => tagLabel(tag, lang)).join(' ')}`.toLowerCase();
+                    const score = [...new Set(normalizedQuery.split('').filter(ch => ch.trim()))].reduce((sum, ch) => sum + (haystack.includes(ch) ? 1 : 0), 0)
+                        + drama.genre.reduce((sum, tag) => sum + (tag.toLowerCase().includes(normalizedQuery) ? 4 : 0), 0);
+                    return { drama, score };
+                }).filter(item => item.score > 0).sort((a, b) => b.score - a.score).map(item => item.drama).slice(0, 6)
+                : [];
             const filtered = mockDramas.filter(d => cat === 'all' || d.genre.includes(categories.find(c => c.id === cat)?.label || ''));
             const continueWatching = mockDramas.filter(d => d.unlockedEpisodes > 0 && d.unlockedEpisodes < d.totalEpisodes).slice(0, 4);
+            const isSearchMode = hasSearched && normalizedQuery;
+            const visibleDramas = isSearchMode ? (searchResults.length ? searchResults : similarResults.length ? similarResults : mockDramas.slice(0, 4)) : filtered;
+            const submitSearch = () => {
+                if (!searchQuery.trim()) {
+                    setHasSearched(false);
+                    setCategoryOpen(true);
+                    return;
+                }
+                setHasSearched(true);
+            };
             return React.createElement('div', { className: 'flex-1 overflow-y-auto pb-[72px] bg-[#0B0B10]' },
                 // Search
                 React.createElement('div', { className: 'px-4 py-3' },
                     React.createElement('div', { className: 'flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10' },
                         React.createElement('span', { className: 'text-white/40' }, '🔍'),
-                        React.createElement('input', { type: 'text', placeholder: t('search.placeholder'), className: 'flex-1 bg-transparent text-white text-sm placeholder:text-white/30 outline-none' })
+                        React.createElement('input', {
+                            type: 'search',
+                            value: searchQuery,
+                            onChange: (e) => { setSearchQuery(e.target.value); if (!e.target.value.trim()) setHasSearched(false); },
+                            onKeyDown: (e) => { if (e.key === 'Enter') submitSearch(); },
+                            placeholder: t('search.placeholder'),
+                            className: 'flex-1 min-w-0 bg-transparent text-white text-sm placeholder:text-white/30 outline-none'
+                        }),
+                        searchQuery.trim() && React.createElement('button', {
+                            onClick: () => { setSearchQuery(''); setHasSearched(false); },
+                            className: 'w-7 h-7 rounded-full bg-white/8 text-white/45 text-sm active:scale-95'
+                        }, '×'),
+                        React.createElement('button', { onClick: submitSearch, className: 'px-3 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-300/20 text-xs font-semibold text-indigo-100 active:scale-95 transition-all' }, searchQuery.trim() ? searchText.search : copy[baseLang].filter)
                     )
                 ),
                 // Hero
-                React.createElement(HeroCarousel, { dramas: hotDramas, onClick: onDramaClick }),
+                !isSearchMode && React.createElement(HeroCarousel, { dramas: hotDramas, onClick: onDramaClick }),
                 // Categories
-                React.createElement('div', { className: 'px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide' },
-                    categories.map(c =>
-                        React.createElement('button', {
-                            key: c.id,
-                            onClick: () => setCat(c.id),
-                            className: `px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-all ${cat === c.id ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25' : 'bg-white/5 text-white/60 hover:text-white/90'}`
-                        }, `${c.icon} ${c.label}`)
+                !isSearchMode && React.createElement('div', { className: 'px-4 py-2' },
+                    React.createElement('button', { onClick: () => setCategoryOpen(true), className: 'w-full flex items-center justify-between rounded-2xl bg-white/[0.055] border border-white/10 px-4 py-3 text-left active:scale-[0.99] transition-transform' },
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm font-semibold text-white' }, copy[baseLang].allCategories),
+                            React.createElement('p', { className: 'text-[11px] text-white/42 mt-0.5 truncate' }, selectedTags.map(tag => tagLabel(tag, lang)).join(' · '))
+                        ),
+                        React.createElement('span', { className: 'text-white/45 text-lg' }, '›')
                     )
                 ),
                 // Shortcuts
-                React.createElement('div', { className: 'px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide' },
+                !isSearchMode && React.createElement('div', { className: 'px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide' },
                     shortcuts.map(s =>
-                        React.createElement('button', { key: s.id, onClick: () => alert(`${s.label} is coming soon.`), className: 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-white/70 hover:text-white text-xs font-medium whitespace-nowrap' }, `${s.icon} ${s.label}`)
+                        React.createElement('button', { key: s.id, onClick: () => alert(`${u[s.textKey]} ${baseLang === 'zh' ? '即将上线。' : 'is coming soon.'}`), className: 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-white/70 hover:text-white text-xs font-medium whitespace-nowrap' }, `${s.icon} ${u[s.textKey]}`)
                     )
                 ),
                 // Continue Watching
-                continueWatching.length > 0 && React.createElement('div', { className: 'px-4 py-2' },
+                isSearchMode && React.createElement('div', { className: 'px-4 py-2' },
+                    React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+                        React.createElement('h3', { className: 'text-sm font-semibold text-white' }, searchResults.length ? searchText.results : searchText.noExact),
+                        React.createElement('button', { onClick: () => { setSearchQuery(''); setHasSearched(false); }, className: 'text-xs text-white/40 active:text-white' }, searchText.clear)
+                    ),
+                    React.createElement('p', { className: 'text-xs text-white/36 mb-2 truncate' }, `"${searchQuery.trim()}"`)
+                ),
+                !isSearchMode && continueWatching.length > 0 && React.createElement('div', { className: 'px-4 py-2' },
                     React.createElement('h3', { className: 'text-sm font-semibold text-white mb-2' }, t('continue.watching')),
                     React.createElement('div', { className: 'flex gap-3 overflow-x-auto scrollbar-hide' },
                         continueWatching.map(d => React.createElement(DramaCard, { key: d.id, drama: d, onClick: onDramaClick, size: 'small', showProgress: true }))
@@ -386,91 +686,189 @@
                 ),
                 // Grid
                 React.createElement('div', { className: 'px-4 pt-1 pb-4 grid grid-cols-2 gap-3' },
-                    filtered.map(d => React.createElement(DramaCard, { key: d.id, drama: d, onClick: onDramaClick, showProgress: true }))
+                    visibleDramas.map(d => React.createElement(DramaCard, { key: d.id, drama: d, onClick: onDramaClick, showProgress: true }))
+                ),
+                categoryOpen && React.createElement(CategorySheet, {
+                    selectedTags,
+                    onDramaClick,
+                    onToggle: (tag) => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev.filter(t => t !== 'All'), tag]),
+                    onReset: () => setSelectedTags(['All']),
+                    onClose: () => setCategoryOpen(false)
+                })
+            );
+        }
+
+        // ======================== 全部分类页 ========================
+        function CategorySheet({ selectedTags, onToggle, onReset, onClose, onDramaClick }) {
+            const { lang, baseLang } = useLang();
+            const c = copy[baseLang];
+            const openDrama = (drama) => {
+                onClose();
+                onDramaClick(drama);
+            };
+            const dramasForTag = (tag) => {
+                const exact = mockDramas.filter(d => d.genre.includes(tag));
+                return exact.length ? exact : mockDramas.filter((_, idx) => (idx + tag.length) % 2 === 0);
+            };
+            return React.createElement('div', { className: 'fixed inset-0 z-[65] bg-[#08080c] animate-slide-up mobile-fixed flex flex-col' },
+                React.createElement('div', { className: 'relative flex items-center px-4 py-4 border-b border-white/8' },
+                    React.createElement('button', { onClick: onClose, className: 'w-10 h-10 rounded-full bg-white/[0.06] border border-white/10 text-white text-2xl flex items-center justify-center active:scale-95' }, '←'),
+                    React.createElement('h2', { className: 'absolute left-16 right-16 text-center text-base font-semibold text-white truncate' }, c.allCategories),
+                    React.createElement('button', { onClick: onReset, className: 'ml-auto px-3 py-1.5 rounded-full bg-white/[0.06] text-xs text-white/60' }, c.reset)
+                ),
+                React.createElement('div', { className: 'flex-1 overflow-y-auto px-4 py-4 pb-24' },
+                    React.createElement('p', { className: 'text-xs text-white/42 mb-4' }, c.categoryIntro),
+                    categoryGroups.map((group) =>
+                        React.createElement('section', { key: group.title, className: 'mb-5' },
+                            React.createElement('div', { className: 'mb-2' },
+                                React.createElement('h3', { className: 'text-base font-bold text-white' }, baseLang === 'zh' ? group.zhTitle : group.title),
+                                React.createElement('p', { className: 'text-xs text-white/38 mt-0.5' }, baseLang === 'zh' ? group.zhDesc : group.desc)
+                            ),
+                            React.createElement('div', { className: 'flex flex-wrap gap-2' },
+                                group.tags.map(tag => {
+                                    const active = selectedTags.includes(tag);
+                                    return React.createElement('button', {
+                                        key: tag,
+                                        onClick: () => onToggle(tag),
+                                        className: `px-3 py-2 rounded-full text-sm font-medium border transition-all ${active ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-transparent shadow-lg shadow-indigo-500/20' : 'bg-white/[0.055] border-white/8 text-white/62'}`
+                                    }, tagLabel(tag, lang));
+                                })
+                            ),
+                            group.tags.slice(0, 3).map(tag => {
+                                const items = dramasForTag(tag).slice(0, 3);
+                                return React.createElement('div', { key: `${group.title}-${tag}`, className: 'mt-4' },
+                                    React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+                                        React.createElement('p', { className: 'text-sm font-semibold text-white/90' }, tag),
+                                        React.createElement('button', { onClick: () => onToggle(tag), className: 'text-xs text-indigo-300' }, c.more)
+                                    ),
+                                    React.createElement('div', { className: 'flex gap-3 overflow-x-auto scrollbar-hide' },
+                                        items.map(d => React.createElement('button', { key: d.id, onClick: () => openDrama(d), className: 'w-28 flex-shrink-0 text-left active:scale-95 transition-transform' },
+                                            React.createElement('div', { className: 'h-36 rounded-xl bg-white/10 overflow-hidden relative', style: visualStyle(d) },
+                                                React.createElement('span', { className: 'absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/55 text-[10px] text-white' }, `${d.totalEpisodes} ${c.eps}`)
+                                            ),
+                                            React.createElement('p', { className: 'mt-1 text-xs font-semibold text-white truncate' }, d.title),
+                                            React.createElement('p', { className: 'text-[10px] text-white/38 truncate' }, genreLine(d, lang))
+                                        )),
+                                        React.createElement('button', { onClick: () => onToggle(tag), className: 'w-28 h-36 flex-shrink-0 rounded-xl bg-white/[0.055] border border-dashed border-white/18 text-xs font-semibold text-white/70 active:scale-95' }, c.more)
+                                    )
+                                );
+                            })
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'fixed bottom-0 left-0 right-0 mobile-fixed p-4 safe-area-bottom bg-[#08080c]/92 backdrop-blur-xl border-t border-white/8' },
+                    React.createElement('button', { onClick: onClose, className: 'btn-primary w-full py-3' }, `${c.apply} · ${selectedTags.length}`)
                 )
             );
         }
 
         // ======================== 购买/解锁弹窗 ========================
-        function PurchaseSheet({ open, drama, episode, onClose }) {
+        function PurchaseSheet({ open, drama, episode, source, intent, onClose, onPaid }) {
+            const { lang, baseLang } = useLang();
+            const c = copy[baseLang];
             const [step, setStep] = useState('plans');
             const [selected, setSelected] = useState('single');
             const [method, setMethod] = useState('card');
             const [done, setDone] = useState(false);
+            const profileMode = source === 'profile';
 
             useEffect(() => {
                 if (open) {
                     setStep('plans');
-                    setSelected('single');
+                    setSelected(profileMode ? (intent === 'recharge' ? 'coins2200' : 'weekly') : 'single');
                     setMethod('card');
                     setDone(false);
                 }
-            }, [open, episode?.id, drama?.id]);
+            }, [open, episode?.id, drama?.id, source, intent]);
 
             if (!open) return null;
 
+            const mt = (key) => mText(baseLang, key);
             const episodeNumber = episode?.number || Math.min((drama?.unlockedEpisodes || 0) + 1, drama?.totalEpisodes || 1);
-            const singleCoins = episode?.price ? 60 : 60;
-            const fullCoins = Math.max(480, ((drama?.totalEpisodes || 30) - (drama?.unlockedEpisodes || 0)) * 45);
+            const coinUnit = { en: 'coins', ar: 'عملة', de: 'Münzen', es: 'Monedas', fr: 'pièces', id: 'Koin', it: 'Monete', ja: 'コイン', ko: '코인', zh: '金币' }[baseLang] || 'coins';
+            const unlockEpTitle = {
+                en: `Unlock Ep ${episodeNumber}`, ar: `فتح الحلقة ${episodeNumber}`, de: `Folge ${episodeNumber} freischalten`,
+                es: `Desbloquear Ep ${episodeNumber}`, fr: `Débloquer ép. ${episodeNumber}`, id: `Buka Ep ${episodeNumber}`,
+                it: `Sblocca Ep ${episodeNumber}`, ja: `第${episodeNumber}話を解除`, ko: `${episodeNumber}화 잠금 해제`, zh: `解锁第 ${episodeNumber} 集`
+            }[baseLang] || `Unlock Ep ${episodeNumber}`;
+            const unlockDesc = { en: 'Watch this paid episode immediately.', ar: 'شاهد هذه الحلقة المدفوعة فورا.', de: 'Diese kostenpflichtige Folge sofort ansehen.', es: 'Ver este episodio de pago al instante.', fr: 'Regarder cet épisode payant immédiatement.', id: 'Tonton episode berbayar ini sekarang.', it: 'Guarda subito questo episodio a pagamento.', ja: 'この有料エピソードをすぐ視聴。', ko: '이 유료 에피소드를 바로 시청합니다.', zh: '立即观看当前付费剧集。' }[baseLang];
+            const unlockFullDesc = { en: 'Unlock all remaining paid episodes in this drama.', ar: 'افتح كل الحلقات المدفوعة المتبقية.', de: 'Alle verbleibenden Bezahlfolgen dieser Serie freischalten.', es: 'Desbloquear todos los episodios de pago restantes.', fr: 'Débloquer tous les épisodes payants restants.', id: 'Buka semua episode berbayar yang tersisa.', it: 'Sblocca tutti gli episodi a pagamento rimanenti.', ja: 'この作品の残り有料エピソードをすべて解除。', ko: '이 드라마의 남은 유료 에피소드를 모두 잠금 해제합니다.', zh: '解锁本剧剩余所有付费集。' }[baseLang];
+            const singleCoins = 20;
+            const fullCoins = Math.max(160, ((drama?.totalEpisodes || 30) - (drama?.unlockedEpisodes || 0)) * singleCoins);
             const options = [
-                { id: 'single', title: `Unlock Ep ${episodeNumber}`, price: `${singleCoins} coins`, desc: 'Unlock this paid episode only.', badge: 'Fast' },
-                { id: 'full', title: 'Unlock Full Drama', price: `${fullCoins.toLocaleString()} coins`, desc: 'Unlock all remaining paid episodes.', badge: 'Best value' },
-                { id: 'weekly', title: 'Weekly Plan', price: '$24.99', desc: 'All episodes available for 7 days, auto-renewal.', badge: 'VIP' },
-                { id: 'monthly', title: 'Monthly Plan', price: '$49.99', desc: 'Watch without limits all month, auto-renewal.', badge: 'Popular' }
+                { id: 'single', group: 'unlock', title: unlockEpTitle, price: `${singleCoins} ${coinUnit}`, desc: unlockDesc, badge: c.single },
+                { id: 'full', group: 'unlock', title: c.unlockFull, price: `${fullCoins.toLocaleString()} ${coinUnit}`, desc: unlockFullDesc, badge: c.bestValue },
+                ...membershipPlans.map(plan => ({ id: plan.id, group: 'vip', title: membershipTitle(plan, baseLang), price: plan.price, desc: `${membershipPerDay(plan, baseLang)} · ${c.dayNote}`, badge: membershipBadge(plan, baseLang) })),
+                ...coinPacks.map(pack => ({ id: pack.id, group: 'packs', title: `${pack.coins.toLocaleString()} ${c.coinRecharge}`, price: pack.price, desc: c.coinsDesc, badge: c.coinRecharge }))
             ];
             const selectedOption = options.find(item => item.id === selected) || options[0];
+            const sectionOrder = profileMode
+                ? [['vip', c.membership], ['packs', c.coinRecharge]]
+                : [['unlock', c.episodeUnlock], ['vip', c.membership], ['packs', c.coinRecharge]];
             const methods = [
-                { id: 'card', name: 'Credit / Debit Card', detail: 'Visa, Mastercard, AmEx' },
-                { id: 'apple', name: 'Apple Pay', detail: 'Quick checkout' },
-                { id: 'paypal', name: 'PayPal', detail: 'Pay with wallet balance' },
-                { id: 'google', name: 'Google Pay', detail: 'Fast mobile payment' }
+                { id: 'card', name: mt('cardPay'), detail: mt('cardDetail') },
+                { id: 'apple', name: 'Apple Pay', detail: mt('appleDetail') },
+                { id: 'paypal', name: 'PayPal', detail: mt('paypalDetail') },
+                { id: 'google', name: 'Google Pay', detail: mt('googleDetail') }
             ];
 
             const finishPayment = () => {
+                onPaid?.(selectedOption);
                 setDone(true);
                 setTimeout(() => onClose(), 900);
             };
+            const chooseAndPay = (id) => {
+                setSelected(id);
+                setStep('pay');
+            };
+            const renderOption = (item, group) => React.createElement('button', {
+                key: item.id,
+                onClick: () => chooseAndPay(item.id),
+                className: `w-full text-left rounded-2xl border transition-all active:scale-[0.98] ${group === 'packs' ? 'p-3 min-h-[118px]' : 'p-4'} ${selected === item.id ? 'bg-[#303044] border-indigo-300/80 shadow-lg shadow-indigo-500/10' : 'bg-white/[0.045] border-white/10'}`
+            },
+                React.createElement('div', { className: group === 'packs' ? 'space-y-2' : 'flex items-start justify-between gap-3' },
+                    React.createElement('div', { className: 'min-w-0' },
+                        React.createElement('div', { className: 'flex items-center gap-2 flex-wrap' },
+                            React.createElement('h4', { className: group === 'packs' ? 'text-lg font-bold text-white leading-tight' : 'text-base font-bold text-white' }, item.title),
+                            React.createElement('span', { className: 'px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/65' }, item.badge)
+                        ),
+                        React.createElement('p', { className: 'text-xs text-white/45 mt-1 leading-snug' }, item.desc)
+                    ),
+                    React.createElement('p', { className: `${group === 'packs' ? 'text-2xl' : 'text-xl'} font-extrabold text-amber-300 whitespace-nowrap drop-shadow-sm` }, item.price)
+                )
+            );
 
             return React.createElement('div', { className: 'fixed inset-0 z-[90] bg-black/75 backdrop-blur-sm flex items-end justify-center mobile-fixed' },
-                React.createElement('div', { className: 'w-full max-h-[88vh] overflow-y-auto rounded-t-3xl bg-[#09090d] border-t border-white/10 p-4 animate-slide-up' },
+                React.createElement('div', { className: 'w-full max-h-[88vh] overflow-y-auto rounded-t-3xl bg-[#09090d] border-t border-white/10 p-4 pb-6 safe-area-bottom animate-slide-up' },
                     React.createElement('div', { className: 'flex items-center justify-between mb-4' },
                         React.createElement('div', null,
                             React.createElement('p', { className: 'text-xs text-white/40' }, drama?.title || 'Xen-Drama'),
-                            React.createElement('h2', { className: 'text-xl font-bold text-white' }, step === 'plans' ? 'Unlock Paid Episodes' : 'Choose Payment')
+                            React.createElement('h2', { className: 'text-xl font-bold text-white' }, step === 'plans' ? (profileMode ? mt('membershipCoins') : c.unlockTitle) : c.choosePayment)
                         ),
                         React.createElement('button', { onClick: onClose, className: 'w-10 h-10 rounded-full bg-white/[0.08] border border-white/10 text-white/80 text-xl flex items-center justify-center active:scale-95 transition-all', 'aria-label': 'Close' }, '×')
                     ),
                     step === 'plans' && React.createElement(React.Fragment, null,
-                        React.createElement('p', { className: 'text-sm text-white/45 mb-3' }, 'Select coins for episode unlock, or subscribe to watch paid episodes without limits.'),
-                        React.createElement('div', { className: 'space-y-2.5' },
-                            options.map(item => React.createElement('button', {
-                                key: item.id,
-                                onClick: () => setSelected(item.id),
-                                className: `w-full text-left rounded-2xl border p-4 transition-all ${selected === item.id ? 'bg-[#403827] border-white/70' : 'bg-white/[0.045] border-white/10'}`
-                            },
-                                React.createElement('div', { className: 'flex items-start justify-between gap-3' },
-                                    React.createElement('div', null,
-                                        React.createElement('div', { className: 'flex items-center gap-2' },
-                                            React.createElement('h3', { className: 'text-base font-semibold text-white' }, item.title),
-                                            React.createElement('span', { className: 'px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/65' }, item.badge)
-                                        ),
-                                        React.createElement('p', { className: 'text-xs text-white/42 mt-1' }, item.desc)
-                                    ),
-                                    React.createElement('p', { className: 'text-lg font-bold text-white whitespace-nowrap' }, item.price)
-                                )
-                            ))
-                        ),
-                        React.createElement('button', { onClick: () => setStep('pay'), className: 'btn-primary w-full mt-4 py-3' }, `Continue · ${selectedOption.price}`)
+                        React.createElement('p', { className: 'text-sm text-white/45 mb-3' }, profileMode ? mt('choosePlanHint') : mt('chooseUnlockHint')),
+                        sectionOrder.map(([group, label]) => React.createElement('section', { key: group, className: 'mb-5' },
+                            React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+                                React.createElement('h3', { className: 'text-sm font-bold text-white' }, label),
+                                group === 'vip' && React.createElement('span', { className: 'text-[11px] text-white/35' }, mt('weeklyFirst'))
+                            ),
+                            React.createElement('div', { className: group === 'packs' ? 'grid grid-cols-2 gap-2.5' : 'space-y-2.5' },
+                                options.filter(item => item.group === group).map(item => renderOption(item, group))
+                            )
+                        )),
+                        React.createElement('p', { className: 'text-center text-[11px] text-white/30 mt-2' }, mt('tapOption'))
                     ),
                     step === 'pay' && React.createElement(React.Fragment, null,
                         React.createElement('div', { className: 'rounded-2xl bg-white/[0.045] border border-white/10 p-4 mb-3' },
                             React.createElement('div', { className: 'flex items-center justify-between' },
-                                React.createElement('span', { className: 'text-sm text-white/45' }, 'Item'),
+                                React.createElement('span', { className: 'text-sm text-white/45' }, c.item),
                                 React.createElement('span', { className: 'text-sm font-semibold text-white' }, selectedOption.title)
                             ),
                             React.createElement('div', { className: 'flex items-center justify-between mt-2' },
-                                React.createElement('span', { className: 'text-sm text-white/45' }, 'Total'),
-                                React.createElement('span', { className: 'text-2xl font-bold text-white' }, selectedOption.price)
+                                React.createElement('span', { className: 'text-sm text-white/45' }, c.total),
+                                React.createElement('span', { className: 'text-3xl font-extrabold text-amber-300' }, selectedOption.price)
                             )
                         ),
                         React.createElement('div', { className: 'space-y-2' },
@@ -487,8 +885,8 @@
                             ))
                         ),
                         React.createElement('div', { className: 'grid grid-cols-2 gap-3 mt-4' },
-                            React.createElement('button', { onClick: () => setStep('plans'), className: 'btn-secondary py-3' }, 'Back'),
-                            React.createElement('button', { onClick: finishPayment, className: 'btn-primary py-3' }, done ? 'Success' : 'Pay Now')
+                            React.createElement('button', { onClick: () => setStep('plans'), className: 'btn-secondary py-3' }, c.back),
+                            React.createElement('button', { onClick: finishPayment, className: 'btn-primary py-3' }, done ? c.success : c.payNow)
                         )
                     )
                 )
@@ -497,14 +895,20 @@
 
         // ======================== 剧集播放页 ========================
         function DramaPlayerPage({ drama, onClose, onPurchaseClick }) {
+            const { lang, baseLang } = useLang();
+            const c = copy[baseLang];
+            const mt = (key) => mText(baseLang, key);
             const [isPlaying, setIsPlaying] = useState(true);
             const [showControls, setShowControls] = useState(true);
-            const [progress, setProgress] = useState(18);
+            const [progress, setProgress] = useState(() => drama.resumeProgress || 18);
             const [speed, setSpeed] = useState(1);
             const [liked, setLiked] = useState(false);
-            const [favorited, setFavorited] = useState(false);
             const [fullScreen, setFullScreen] = useState(false);
-            const currentEp = drama.episodes[0];
+            const [episodeDrawerOpen, setEpisodeDrawerOpen] = useState(false);
+            const paymentShown = useRef(false);
+            const initialEpisodeNumber = Math.max(1, Math.min(drama.resumeEpisode || 1, drama.unlockedEpisodes || 1));
+            const [currentEpisodeNumber, setCurrentEpisodeNumber] = useState(initialEpisodeNumber);
+            const currentEp = drama.episodes[currentEpisodeNumber - 1] || drama.episodes[0];
             const nextLocked = drama.episodes[drama.unlockedEpisodes] || drama.episodes[drama.episodes.length - 1];
 
             useEffect(() => {
@@ -512,6 +916,16 @@
                 const timer = setInterval(() => setProgress(p => (p >= 99 ? 0 : p + 1)), 900);
                 return () => clearInterval(timer);
             }, [isPlaying]);
+
+            useEffect(() => {
+                if (paymentShown.current || !nextLocked || drama.unlockedEpisodes >= drama.totalEpisodes) return;
+                if (progress >= 88) {
+                    paymentShown.current = true;
+                    setIsPlaying(false);
+                    setShowControls(true);
+                    onPurchaseClick({ drama, episode: nextLocked, source: 'player', intent: 'unlock' });
+                }
+            }, [progress, nextLocked, drama, onPurchaseClick]);
 
             const toggleControls = () => setShowControls(p => !p);
             const cycleSpeed = (e) => {
@@ -531,11 +945,6 @@
                     React.createElement('div', { className: 'absolute inset-0', style: visualStyle(drama) },
                         React.createElement('div', { className: 'absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/85' })
                     ),
-                    drama.isLandscape && !fullScreen && React.createElement('div', { className: 'absolute top-[26%] left-0 right-0 aspect-video bg-black/20 overflow-hidden', style: visualStyle(drama) },
-                        React.createElement('div', { className: 'absolute inset-0 bg-black/5' }),
-                        React.createElement('div', { className: 'absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-md bg-black/45 backdrop-blur-sm text-sm font-semibold text-white' }, `Ep ${currentEp.number}`)
-                    ),
-                    !drama.isLandscape && React.createElement('div', { className: 'absolute inset-x-0 top-0 bottom-0', style: visualStyle(drama) }),
                     !isPlaying && React.createElement('div', { className: 'absolute inset-0 flex items-center justify-center bg-black/15' },
                         React.createElement('button', { onClick: (e) => { e.stopPropagation(); setIsPlaying(true); setShowControls(true); }, className: 'w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white text-3xl flex items-center justify-center' }, '▶')
                     ),
@@ -543,41 +952,50 @@
                         React.createElement('button', { onClick: (e) => { e.stopPropagation(); fullScreen ? setFullScreen(false) : onClose(); }, className: 'w-10 h-10 rounded-full bg-black/25 backdrop-blur-sm text-white text-2xl flex items-center justify-center active:scale-95' }, '‹'),
                         React.createElement('div', { className: 'flex-1 min-w-0 px-3' },
                             React.createElement('p', { className: 'text-sm font-semibold text-white truncate' }, `Ep ${currentEp.number} · ${drama.title}`),
-                            React.createElement('p', { className: 'text-[11px] text-white/45 truncate' }, `${drama.genre.slice(0, 2).join(' · ')} · ${drama.totalEpisodes} episodes`)
+                            React.createElement('p', { className: 'text-[11px] text-white/45 truncate' }, `${genreLine(drama, lang)} · ${drama.totalEpisodes} ${c.eps}`)
                         ),
-                        React.createElement('button', { onClick: cycleSpeed, className: 'px-2.5 py-1.5 rounded-full bg-black/25 backdrop-blur-sm text-xs font-semibold text-white' }, `${speed}x`)
+                        React.createElement('span', { className: 'w-10' })
                     ),
-                    React.createElement('div', { className: 'absolute right-3 bottom-[26%] z-20 flex flex-col items-center gap-4' },
+                    React.createElement('div', { className: 'absolute right-3 bottom-[34%] z-20 flex flex-col items-center gap-5' },
                         React.createElement('button', { onClick: (e) => { e.stopPropagation(); setLiked(!liked); }, className: 'flex flex-col items-center gap-1 text-white active:scale-95' },
-                            React.createElement('span', { className: 'text-4xl leading-none drop-shadow-lg' }, liked ? '♥' : '♡'),
-                            React.createElement('span', { className: 'text-[11px] text-white/80' }, liked ? '1.6万' : 'Like')
+                            React.createElement('span', { className: 'text-5xl leading-none drop-shadow-lg' }, liked ? '♥' : '♡'),
+                            React.createElement('span', { className: 'text-xs text-white/80' }, liked ? '1.6万' : mt('like'))
                         ),
-                        React.createElement('button', { onClick: (e) => { e.stopPropagation(); setFavorited(!favorited); }, className: 'flex flex-col items-center gap-1 text-white active:scale-95' },
-                            React.createElement('span', { className: 'text-4xl leading-none drop-shadow-lg' }, favorited ? '★' : '☆'),
-                            React.createElement('span', { className: 'text-[11px] text-white/80' }, favorited ? 'Saved' : 'Save')
-                        ),
-                        React.createElement('button', { onClick: (e) => { e.stopPropagation(); alert('Comments opened.'); }, className: 'flex flex-col items-center gap-1 text-white active:scale-95' },
-                            React.createElement('span', { className: 'text-3xl leading-none drop-shadow-lg' }, '●●'),
-                            React.createElement('span', { className: 'text-[11px] text-white/80' }, '556')
-                        ),
-                        React.createElement('button', { onClick: (e) => { e.stopPropagation(); alert('Share panel opened.'); }, className: 'flex flex-col items-center gap-1 text-white active:scale-95' },
-                            React.createElement('span', { className: 'text-4xl leading-none drop-shadow-lg' }, '↗'),
-                            React.createElement('span', { className: 'text-[11px] text-white/80' }, 'Share')
+                        React.createElement('button', { onClick: cycleSpeed, className: 'min-w-14 px-4 py-3 rounded-full bg-black/50 backdrop-blur-sm text-base font-extrabold text-white shadow-lg active:scale-95' },
+                            `${speed}x`
                         )
                     ),
-                    !fullScreen && React.createElement('div', { className: 'absolute left-4 right-20 bottom-[18%] z-20' },
-                        React.createElement('div', { className: 'inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 mb-3 max-w-full' },
-                            React.createElement('div', { className: 'w-14 h-16 rounded-lg flex-shrink-0 bg-white/10', style: drama.coverImage ? { backgroundImage: `url("${drama.coverImage}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: drama.cover } }),
-                            React.createElement('div', { className: 'min-w-0' },
-                                React.createElement('p', { className: 'text-sm font-bold text-white truncate' }, drama.title),
-                                React.createElement('button', { onClick: (e) => { e.stopPropagation(); onPurchaseClick({ drama, episode: nextLocked }); }, className: 'mt-2 px-4 py-2 rounded-full bg-pink-600 text-xs font-bold text-white shadow-lg shadow-pink-600/30 active:scale-95' }, '▶ Watch Full Episode')
+                    !fullScreen && episodeDrawerOpen && React.createElement('div', { className: 'absolute left-3 right-3 bottom-[76px] z-[25]' },
+                        React.createElement('div', { className: 'rounded-2xl bg-black/58 backdrop-blur-xl border border-white/10 p-3 shadow-2xl' },
+                            React.createElement('div', { className: 'flex items-center justify-between mb-3' },
+                                React.createElement('div', { className: 'min-w-0' },
+                                    React.createElement('p', { className: 'text-base font-bold text-white truncate' }, drama.title),
+                                    React.createElement('p', { className: 'text-xs text-white/45' }, `${drama.unlockedEpisodes}/${drama.totalEpisodes} ${c.eps}`)
+                                ),
+                                React.createElement('button', { onClick: (e) => { e.stopPropagation(); setEpisodeDrawerOpen(false); }, className: 'w-8 h-8 rounded-full bg-white/10 text-white/70' }, '⌄')
+                            ),
+                            React.createElement('div', { className: 'grid grid-cols-6 gap-2 max-h-48 overflow-y-auto' },
+                                drama.episodes.map(ep =>
+                                    React.createElement('button', {
+                                        key: ep.id,
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            if (ep.number > drama.unlockedEpisodes) {
+                                                onPurchaseClick({ drama, episode: ep, source: 'player', intent: 'unlock' });
+                                                return;
+                                            }
+                                            setCurrentEpisodeNumber(ep.number);
+                                            setProgress(Math.max(6, Math.min(82, (ep.number / Math.max(1, drama.unlockedEpisodes)) * 78)));
+                                            setIsPlaying(true);
+                                            setEpisodeDrawerOpen(false);
+                                        },
+                                        className: `h-10 rounded-xl text-xs font-bold border ${ep.number === currentEp.number ? 'bg-pink-600 border-pink-400 text-white' : ep.number <= drama.unlockedEpisodes ? 'bg-white/10 border-white/10 text-white/85' : 'bg-black/25 border-white/10 text-white/40'}`
+                                    }, ep.number <= drama.unlockedEpisodes ? ep.number : '🔒')
+                                )
                             )
-                        ),
-                        drama.isLandscape && React.createElement('button', { onClick: (e) => { e.stopPropagation(); setFullScreen(true); setShowControls(true); }, className: 'ml-[38%] mt-1 px-4 py-2 rounded-md bg-black/45 backdrop-blur-sm border border-white/10 text-sm font-semibold text-white active:scale-95' }, '▯ 全屏观看'),
-                        React.createElement('h2', { className: 'text-xl font-bold text-white mt-3 truncate' }, drama.title),
-                        React.createElement('p', { className: 'text-sm text-white/65 mt-1 line-clamp-1' }, `Hot review: ${drama.description}`)
+                        )
                     ),
-                    showControls && React.createElement('div', { className: 'absolute left-4 right-4 bottom-8 z-30' },
+                    showControls && React.createElement('div', { className: 'absolute left-4 right-4 bottom-[68px] z-30' },
                         React.createElement('input', {
                             type: 'range',
                             min: '0',
@@ -593,20 +1011,35 @@
                             drama.isLandscape && React.createElement('button', { onClick: (e) => { e.stopPropagation(); setFullScreen(true); }, className: 'text-white text-lg' }, '⛶')
                         )
                     )
+                    ,
+                    !fullScreen && React.createElement('button', {
+                        onClick: (e) => { e.stopPropagation(); setEpisodeDrawerOpen(v => !v); setShowControls(true); },
+                        className: 'absolute left-3 right-3 bottom-3 z-30 h-[48px] rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 px-4 flex items-center justify-between shadow-lg active:bg-white/10 transition-colors'
+                    },
+                        React.createElement('div', { className: 'flex items-center gap-3 min-w-0' },
+                            React.createElement('span', { className: 'text-lg text-pink-400' }, '▰'),
+                            React.createElement('div', { className: 'text-left min-w-0' },
+                                React.createElement('p', { className: 'text-[13px] font-extrabold text-white truncate' }, `${baseLang === 'zh' ? '第' : 'EP.'}${currentEp.number}${baseLang === 'zh' ? '集' : ''}`),
+                                React.createElement('p', { className: 'text-[10px] text-white/45 truncate' }, drama.unlockedEpisodes >= drama.totalEpisodes ? (baseLang === 'zh' ? '全集已解锁' : 'All unlocked') : `${drama.unlockedEpisodes}/${drama.totalEpisodes} ${c.eps}`)
+                            )
+                        ),
+                        React.createElement('span', { className: 'text-2xl text-white/70' }, episodeDrawerOpen ? '⌄' : '›')
+                    )
                 )
             );
         }
 
         // ======================== 个人页 ========================
-        function ProfilePage({ onDramaClick, onPurchaseClick }) {
-            const { t, lang, setLang } = useLang();
+        function ProfilePage({ onDramaClick, onPurchaseClick, isLoggedIn, setIsLoggedIn, isVip, setIsVip }) {
+            const { t, lang, baseLang, setLang } = useLang();
             const [authOpen, setAuthOpen] = useState(false);
             const [authMode, setAuthMode] = useState('login');
             const [activePanel, setActivePanel] = useState(null);
+            const [languageOpen, setLanguageOpen] = useState(false);
             const [selectedPlan, setSelectedPlan] = useState('monthly');
-            const [selectedAmount, setSelectedAmount] = useState(19.99);
+            const [selectedPack, setSelectedPack] = useState('coins2200');
             const [checkoutType, setCheckoutType] = useState('subscription');
-            const [rechargeMethod, setRechargeMethod] = useState('Credit Card');
+            const [rechargeMethod, setRechargeMethod] = useState('card');
             const [privacySettings, setPrivacySettings] = useState({
                 recommendations: true,
                 email: false,
@@ -616,12 +1049,49 @@
             const favs = mockDramas.filter(d => [1, 3, 5].includes(d.id));
             const playlist = mockDramas.slice(0, 5);
             const history = mockDramas.slice(2, 7);
-            const plans = [
-                { id: 'weekly', name: 'Weekly VIP', price: '$3.99', note: 'Best for trial watching' },
-                { id: 'monthly', name: 'Monthly VIP', price: '$9.99', note: 'Unlimited unlocked episodes' },
-                { id: 'yearly', name: 'Yearly VIP', price: '$79.99', note: 'Save 33% for heavy viewers' }
+            const c = copy[baseLang];
+            const u = uiText[baseLang];
+            const mt = (key) => mText(baseLang, key);
+            const rechargeRecords = [
+                { id: 1, title: '5,800 Coins', amount: '+$49.99', time: '2026-08-13 15:42', status: c.success },
+                { id: 2, title: '2,200 Coins', amount: '+$19.99', time: '2026-08-12 21:16', status: c.success },
+                { id: 3, title: 'Weekly Pass', amount: '-$9.99', time: '2026-08-10 09:08', status: c.success },
+                { id: 4, title: '1,050 Coins', amount: '+$9.99', time: '2026-08-08 18:31', status: c.success },
+                { id: 5, title: '500 Coins', amount: '+$4.99', time: '2026-08-06 13:20', status: c.success }
             ];
-            const amounts = [4.99, 9.99, 19.99, 49.99];
+            const coinUnit = { en: 'Coins', ar: 'عملة', de: 'Münzen', es: 'Monedas', fr: 'pièces', id: 'Koin', it: 'Monete', ja: 'コイン', ko: '코인', zh: '金币' }[baseLang] || 'Coins';
+            const panelTitles = {
+                subscription: c.membership,
+                recharge: c.coinRecharge,
+                payment: c.choosePayment,
+                wallet: t('profile.wallet'),
+                rechargeHistory: u.recharges,
+                favorites: t('profile.favorites'),
+                playlist: t('profile.playlist'),
+                history: t('profile.history'),
+                privacy: t('profile.privacy')
+            };
+            const authText = {
+                login: translations[baseLang]['nav.profile'] === '我的' ? '登录' : (baseLang === 'ja' ? 'ログイン' : baseLang === 'ko' ? '로그인' : baseLang === 'fr' ? 'Connexion' : baseLang === 'es' ? 'Iniciar sesión' : baseLang === 'de' ? 'Anmelden' : baseLang === 'it' ? 'Accedi' : baseLang === 'id' ? 'Masuk' : baseLang === 'ar' ? 'تسجيل الدخول' : 'Login'),
+                register: baseLang === 'zh' ? '注册' : baseLang === 'ja' ? '登録' : baseLang === 'ko' ? '가입' : baseLang === 'fr' ? 'Créer un compte' : baseLang === 'es' ? 'Registrarse' : baseLang === 'de' ? 'Registrieren' : baseLang === 'it' ? 'Registrati' : baseLang === 'id' ? 'Daftar' : baseLang === 'ar' ? 'إنشاء حساب' : 'Register',
+                create: baseLang === 'zh' ? '创建账号' : baseLang === 'ja' ? 'アカウント作成' : baseLang === 'ko' ? '계정 만들기' : baseLang === 'fr' ? 'Créer un compte' : baseLang === 'es' ? 'Crear cuenta' : baseLang === 'de' ? 'Konto erstellen' : baseLang === 'it' ? 'Crea account' : baseLang === 'id' ? 'Buat Akun' : baseLang === 'ar' ? 'إنشاء حساب' : 'Create Account',
+                googleLogin: baseLang === 'zh' ? '使用 Google 继续登录' : baseLang === 'ja' ? 'Googleで続行' : baseLang === 'ko' ? 'Google로 계속' : baseLang === 'fr' ? 'Continuer avec Google' : baseLang === 'es' ? 'Continuar con Google' : baseLang === 'de' ? 'Mit Google fortfahren' : baseLang === 'it' ? 'Continua con Google' : baseLang === 'id' ? 'Lanjutkan dengan Google' : baseLang === 'ar' ? 'المتابعة باستخدام Google' : 'Continue with Google',
+                googleRegister: baseLang === 'zh' ? '使用 Google 注册' : baseLang === 'ja' ? 'Googleで登録' : baseLang === 'ko' ? 'Google로 가입' : baseLang === 'fr' ? 'S’inscrire avec Google' : baseLang === 'es' ? 'Registrarse con Google' : baseLang === 'de' ? 'Mit Google registrieren' : baseLang === 'it' ? 'Registrati con Google' : baseLang === 'id' ? 'Daftar dengan Google' : baseLang === 'ar' ? 'التسجيل باستخدام Google' : 'Sign up with Google',
+                email: baseLang === 'zh' ? '邮箱' : baseLang === 'ja' ? 'メール' : baseLang === 'ko' ? '이메일' : baseLang === 'fr' ? 'E-mail' : baseLang === 'es' ? 'Correo' : baseLang === 'de' ? 'E-Mail' : baseLang === 'it' ? 'Email' : baseLang === 'id' ? 'Email' : baseLang === 'ar' ? 'البريد الإلكتروني' : 'Email',
+                password: baseLang === 'zh' ? '密码' : baseLang === 'ja' ? 'パスワード' : baseLang === 'ko' ? '비밀번호' : baseLang === 'fr' ? 'Mot de passe' : baseLang === 'es' ? 'Contraseña' : baseLang === 'de' ? 'Passwort' : baseLang === 'it' ? 'Password' : baseLang === 'id' ? 'Kata sandi' : baseLang === 'ar' ? 'كلمة المرور' : 'Password',
+                username: baseLang === 'zh' ? '用户名' : baseLang === 'ja' ? 'ユーザー名' : baseLang === 'ko' ? '사용자 이름' : baseLang === 'fr' ? 'Nom d’utilisateur' : baseLang === 'es' ? 'Usuario' : baseLang === 'de' ? 'Benutzername' : baseLang === 'it' ? 'Nome utente' : baseLang === 'id' ? 'Nama pengguna' : baseLang === 'ar' ? 'اسم المستخدم' : 'Username'
+            };
+            const profileCopy = {
+                guest: u.guest,
+                guestTip: u.guestTip,
+                vip: u.vip,
+                logout: u.logout,
+                loggedOut: u.loggedOut,
+                loggedIn: u.loggedIn,
+                registered: u.registered
+            };
+            const selectedPlanData = membershipPlans.find(p => p.id === selectedPlan) || membershipPlans[1];
+            const selectedPackData = coinPacks.find(p => p.id === selectedPack) || coinPacks[2];
 
             const openAuth = (mode) => {
                 setAuthMode(mode);
@@ -632,6 +1102,9 @@
                 setCheckoutType(type);
                 setActivePanel('payment');
             };
+            const openProfilePurchase = (intent = 'membership') => {
+                onPurchaseClick({ source: 'profile', intent });
+            };
 
             const openDramaFromPanel = (drama) => {
                 setActivePanel(null);
@@ -640,16 +1113,6 @@
 
             const renderPanel = () => {
                 if (!activePanel) return null;
-                const panelTitles = {
-                    subscription: 'Subscription',
-                    recharge: 'Recharge',
-                    payment: 'Payment',
-                    wallet: 'Wallet',
-                    favorites: 'Favorites',
-                    playlist: 'Playlist',
-                    history: 'History',
-                    privacy: 'Privacy'
-                };
                 const title = panelTitles[activePanel] || 'Profile';
                 return React.createElement('div', { className: 'fixed inset-0 z-[70] bg-[#0B0B10] animate-slide-up flex flex-col mobile-fixed' },
                     React.createElement('div', { className: 'relative flex items-center justify-between px-4 py-3 border-b border-white/5' },
@@ -664,82 +1127,109 @@
                     React.createElement('div', { className: 'flex-1 overflow-y-auto px-4 py-4 pb-24' },
                         activePanel === 'subscription' && React.createElement(React.Fragment, null,
                             React.createElement('div', { className: 'rounded-2xl p-4 mb-4 bg-gradient-to-r from-indigo-500/25 to-fuchsia-500/20 border border-indigo-300/15' },
-                                React.createElement('p', { className: 'text-xs text-indigo-200 mb-1' }, 'VIP Access'),
-                                React.createElement('h3', { className: 'text-xl font-bold text-white' }, 'Watch all premium episodes'),
-                                React.createElement('p', { className: 'text-xs text-white/55 mt-1' }, 'No episode locks, faster updates, and exclusive drama packs.')
+                                React.createElement('p', { className: 'text-xs text-indigo-200 mb-1' }, u.vipAccess),
+                                React.createElement('h3', { className: 'text-xl font-bold text-white' }, u.premiumAccess),
+                                React.createElement('p', { className: 'text-xs text-white/55 mt-1' }, u.premiumAccessDesc)
                             ),
                             React.createElement('div', { className: 'space-y-2.5' },
-                                plans.map(plan => React.createElement('button', {
+                                membershipPlans.map(plan => React.createElement('button', {
                                     key: plan.id,
                                     onClick: () => setSelectedPlan(plan.id),
                                     className: `w-full text-left p-4 rounded-2xl border transition-all ${selectedPlan === plan.id ? 'bg-indigo-500/15 border-indigo-400/70' : 'bg-white/[0.04] border-white/10'}`
                                 },
                                     React.createElement('div', { className: 'flex items-center justify-between gap-3' },
                                         React.createElement('div', null,
-                                            React.createElement('p', { className: 'text-sm font-semibold text-white' }, plan.name),
-                                            React.createElement('p', { className: 'text-xs text-white/45 mt-0.5' }, plan.note)
+                                            React.createElement('div', { className: 'flex items-center gap-2 flex-wrap' },
+                                                React.createElement('p', { className: 'text-sm font-semibold text-white' }, membershipTitle(plan, baseLang)),
+                                                React.createElement('span', { className: 'px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/65' }, membershipBadge(plan, baseLang))
+                                            ),
+                                            React.createElement('p', { className: 'text-xs text-white/45 mt-0.5' }, `${membershipPerDay(plan, baseLang)} · ${c.dayNote}`)
                                         ),
                                         React.createElement('p', { className: 'text-base font-bold text-white' }, plan.price)
                                     )
                                 ))
                             ),
-                            React.createElement('button', { onClick: () => openPayment('subscription'), className: 'btn-primary w-full mt-5 py-3' }, 'Continue to Pay')
+                            React.createElement('button', { onClick: () => openPayment('subscription'), className: 'btn-primary w-full mt-5 py-3' }, `${c.continue} · ${selectedPlanData.price}`)
                         ),
                         activePanel === 'recharge' && React.createElement(React.Fragment, null,
                             React.createElement('div', { className: 'glass-card p-4 mb-4' },
-                                React.createElement('p', { className: 'text-xs text-white/45' }, 'Current balance'),
+                                React.createElement('p', { className: 'text-xs text-white/45' }, u.currentBalance),
                                 React.createElement('p', { className: 'text-3xl font-bold text-white mt-1' }, '$28.50')
                             ),
-                            React.createElement('h3', { className: 'text-sm font-semibold text-white mb-2' }, 'Choose Amount'),
+                            React.createElement('h3', { className: 'text-sm font-semibold text-white mb-2' }, u.chooseCoins),
                             React.createElement('div', { className: 'grid grid-cols-2 gap-2.5' },
-                                amounts.map(amount => React.createElement('button', {
-                                    key: amount,
-                                    onClick: () => setSelectedAmount(amount),
-                                    className: `py-4 rounded-2xl border text-base font-bold transition-all ${selectedAmount === amount ? 'bg-indigo-500/20 border-indigo-400 text-white' : 'bg-white/[0.04] border-white/10 text-white/75'}`
-                                }, `$${amount}`))
+                                coinPacks.map(pack => React.createElement('button', {
+                                    key: pack.id,
+                                    onClick: () => setSelectedPack(pack.id),
+                                    className: `p-3 min-h-[104px] rounded-2xl border text-left transition-all ${selectedPack === pack.id ? 'bg-indigo-500/20 border-indigo-400 text-white' : 'bg-white/[0.04] border-white/10 text-white/75'}`
+                                },
+                                    React.createElement('p', { className: 'text-lg font-bold text-white' }, `${pack.coins.toLocaleString()} ${coinUnit}`),
+                                    React.createElement('p', { className: 'text-base font-bold text-amber-300 mt-1' }, pack.price),
+                                    React.createElement('p', { className: 'text-xs text-white/42 mt-2' }, c.coinsDesc)
+                                ))
                             ),
                             React.createElement('div', { className: 'mt-5 space-y-2' },
-                                ['Credit Card', 'Apple Pay', 'PayPal'].map((method) =>
-                                    React.createElement('button', { key: method, onClick: () => setRechargeMethod(method), className: `w-full flex items-center justify-between p-3 rounded-xl border text-left ${rechargeMethod === method ? 'bg-indigo-500/15 border-indigo-400/70' : 'bg-white/[0.04] border-white/5'}` },
-                                        React.createElement('span', { className: 'text-sm text-white' }, method),
-                                        React.createElement('span', { className: `w-4 h-4 rounded-full border ${rechargeMethod === method ? 'bg-indigo-400 border-indigo-400' : 'border-white/30'}` })
+                                [
+                                    { id: 'card', name: mt('cardPay') },
+                                    { id: 'apple', name: 'Apple Pay' },
+                                    { id: 'paypal', name: 'PayPal' }
+                                ].map((method) =>
+                                    React.createElement('button', { key: method.id, onClick: () => setRechargeMethod(method.id), className: `w-full flex items-center justify-between p-3 rounded-xl border text-left ${rechargeMethod === method.id ? 'bg-indigo-500/15 border-indigo-400/70' : 'bg-white/[0.04] border-white/5'}` },
+                                        React.createElement('span', { className: 'text-sm text-white' }, method.name),
+                                        React.createElement('span', { className: `w-4 h-4 rounded-full border ${rechargeMethod === method.id ? 'bg-indigo-400 border-indigo-400' : 'border-white/30'}` })
                                     )
                                 )
                             ),
-                            React.createElement('button', { onClick: () => openPayment('recharge'), className: 'btn-primary w-full mt-5 py-3' }, `Recharge $${selectedAmount}`)
+                            React.createElement('button', { onClick: () => openPayment('recharge'), className: 'btn-primary w-full mt-5 py-3' }, `${u.refill} · ${selectedPackData.price}`)
                         ),
                         activePanel === 'payment' && React.createElement(React.Fragment, null,
                             React.createElement('div', { className: 'glass-card p-4 mb-4' },
                                 React.createElement('div', { className: 'flex items-center justify-between mb-2' },
-                                    React.createElement('span', { className: 'text-sm text-white/55' }, 'Order'),
-                                    React.createElement('span', { className: 'text-sm text-white' }, checkoutType === 'recharge' ? `Wallet Recharge` : selectedPlan === 'yearly' ? 'Yearly VIP' : selectedPlan === 'weekly' ? 'Weekly VIP' : 'Monthly VIP')
+                                    React.createElement('span', { className: 'text-sm text-white/55' }, c.item),
+                                    React.createElement('span', { className: 'text-sm text-white' }, checkoutType === 'recharge' ? `${selectedPackData.coins.toLocaleString()} ${c.coinRecharge}` : membershipTitle(selectedPlanData, baseLang))
                                 ),
                                 React.createElement('div', { className: 'flex items-center justify-between' },
-                                    React.createElement('span', { className: 'text-sm text-white/55' }, 'Total'),
-                                    React.createElement('span', { className: 'text-2xl font-bold text-white' }, checkoutType === 'recharge' ? `$${selectedAmount}` : selectedPlan === 'yearly' ? '$79.99' : selectedPlan === 'weekly' ? '$3.99' : '$9.99')
+                                    React.createElement('span', { className: 'text-sm text-white/55' }, c.total),
+                                    React.createElement('span', { className: 'text-2xl font-bold text-white' }, checkoutType === 'recharge' ? selectedPackData.price : selectedPlanData.price)
                                 )
                             ),
                             React.createElement('div', { className: 'space-y-3' },
-                                React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'Card number' }),
+                                React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: u.cardNumber }),
                                 React.createElement('div', { className: 'grid grid-cols-2 gap-3' },
-                                    React.createElement('input', { className: 'px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'MM / YY' }),
+                                    React.createElement('input', { className: 'px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: u.expiry }),
                                     React.createElement('input', { className: 'px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'CVV' })
                                 ),
-                                React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'Name on card' })
+                                React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: u.nameOnCard })
                             ),
-                            React.createElement('button', { onClick: () => { alert('Payment submitted.'); setActivePanel(null); }, className: 'btn-primary w-full mt-5 py-3' }, 'Pay Now')
+                            React.createElement('button', { onClick: () => { alert(mt('paymentSubmitted')); setActivePanel(null); }, className: 'btn-primary w-full mt-5 py-3' }, c.payNow)
                         ),
                         activePanel === 'wallet' && React.createElement(React.Fragment, null,
                             React.createElement('div', { className: 'rounded-2xl p-4 mb-4 bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-white/10' },
-                                React.createElement('p', { className: 'text-xs text-white/45' }, 'Available balance'),
+                                React.createElement('p', { className: 'text-xs text-white/45' }, u.currentBalance),
                                 React.createElement('p', { className: 'text-3xl font-bold text-white mt-1' }, '$28.50'),
-                                React.createElement('button', { onClick: () => setActivePanel('recharge'), className: 'btn-primary mt-4 py-2.5' }, 'Recharge')
+                                React.createElement('button', { onClick: () => openProfilePurchase('recharge'), className: 'btn-primary mt-4 py-2.5' }, panelTitles.recharge)
                             ),
-                            React.createElement('h3', { className: 'text-sm font-semibold text-white mb-2' }, 'Recent activity'),
-                            [['Unlocked Ep 8', '-60 coins'], ['Monthly VIP', '-$49.99'], ['Wallet Recharge', '+$19.99']].map(row =>
+                            React.createElement('h3', { className: 'text-sm font-semibold text-white mb-2' }, mt('recentActivity')),
+                            [[mt('unlockEp'), `-20 ${coinUnit}`], [mt('monthlyVip'), '-$24.99'], [panelTitles.recharge, '+$19.99']].map(row =>
                                 React.createElement('div', { key: row[0], className: 'flex items-center justify-between p-3 rounded-xl bg-white/[0.04] border border-white/5 mb-2' },
                                     React.createElement('span', { className: 'text-sm text-white' }, row[0]),
                                     React.createElement('span', { className: 'text-sm text-white/55' }, row[1])
+                                )
+                            )
+                        ),
+                        activePanel === 'rechargeHistory' && React.createElement('div', { className: 'space-y-2.5' },
+                            rechargeRecords.map(record =>
+                                React.createElement('div', { key: record.id, className: 'rounded-2xl bg-white/[0.045] border border-white/8 p-4' },
+                                    React.createElement('div', { className: 'flex items-center justify-between gap-3' },
+                                        React.createElement('div', { className: 'min-w-0' },
+                                            React.createElement('p', { className: 'text-sm font-semibold text-white truncate' }, record.title),
+                                            React.createElement('p', { className: 'text-xs text-white/40 mt-1' }, record.time)
+                                        ),
+                                        React.createElement('div', { className: 'text-right flex-shrink-0' },
+                                            React.createElement('p', { className: 'text-base font-bold text-emerald-300' }, record.amount),
+                                            React.createElement('p', { className: 'text-[11px] text-white/35 mt-1' }, record.status)
+                                        )
+                                    )
                                 )
                             )
                         ),
@@ -752,7 +1242,7 @@
                                     React.createElement('div', { className: 'w-14 h-16 rounded-xl flex-shrink-0', style: { background: d.cover } }),
                                     React.createElement('div', { className: 'flex-1 min-w-0' },
                                         React.createElement('p', { className: 'text-sm font-semibold text-white truncate' }, d.title),
-                                        React.createElement('p', { className: 'text-xs text-white/45 mt-1' }, `Queue ${idx + 1} · ${d.totalEpisodes} eps`)
+                                        React.createElement('p', { className: 'text-xs text-white/45 mt-1' }, `${u.queue} ${idx + 1} · ${d.totalEpisodes} ${c.eps}`)
                                     ),
                                     React.createElement('span', { className: 'text-white/35' }, '›')
                                 )
@@ -764,9 +1254,9 @@
                                     React.createElement('div', { className: 'flex items-center justify-between gap-3' },
                                         React.createElement('div', { className: 'min-w-0' },
                                             React.createElement('p', { className: 'text-sm font-semibold text-white truncate' }, d.title),
-                                            React.createElement('p', { className: 'text-xs text-white/45 mt-1' }, `Watched Ep ${idx + 2} · ${d.genre[0]}`)
+                                            React.createElement('p', { className: 'text-xs text-white/45 mt-1' }, `${u.watchedEp} ${idx + 2} · ${tagLabel(d.genre[0], lang)}`)
                                         ),
-                                        React.createElement('button', { onClick: () => openDramaFromPanel(d), className: 'px-3 py-1.5 rounded-full bg-white/10 text-xs text-white/70' }, 'Continue')
+                                    React.createElement('button', { onClick: () => openDramaFromPanel(d), className: 'px-3 py-1.5 rounded-full bg-white/10 text-xs text-white/70' }, c.continue)
                                     ),
                                     React.createElement('div', { className: 'h-1 rounded-full bg-white/10 mt-3 overflow-hidden' },
                                         React.createElement('div', { className: 'h-full bg-indigo-400', style: { width: `${35 + idx * 10}%` } })
@@ -776,10 +1266,10 @@
                         ),
                         activePanel === 'privacy' && React.createElement('div', { className: 'space-y-3' },
                             [
-                                ['recommendations', 'Personalized recommendations'],
-                                ['email', 'Email notifications'],
-                                ['autoplay', 'Autoplay next episode'],
-                                ['watchHistory', 'Show watch history']
+                                ['recommendations', u.personalizedRecommendations],
+                                ['email', u.emailNotifications],
+                                ['autoplay', u.autoplayNext],
+                                ['watchHistory', u.showWatchHistory]
                             ].map(([key, label]) =>
                                 React.createElement('button', {
                                     key,
@@ -792,7 +1282,7 @@
                                     )
                                 )
                             ),
-                            React.createElement('button', { onClick: () => alert('Data export requested.'), className: 'btn-secondary w-full py-3 mt-2' }, 'Export My Data')
+                            React.createElement('button', { onClick: () => alert(u.privacyExport), className: 'btn-secondary w-full py-3 mt-2' }, u.privacyExport)
                         )
                     )
                 );
@@ -800,33 +1290,68 @@
 
             return React.createElement('div', { className: 'flex-1 overflow-y-auto pb-[72px] bg-[#0B0B10] px-4 pt-4' },
                 React.createElement('div', { className: 'flex items-center gap-4 mb-4' },
-                    React.createElement('div', { className: 'w-16 h-16 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center justify-center text-2xl font-bold' }, 'A'),
+                    React.createElement('div', { className: 'relative w-16 h-16 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center justify-center text-2xl font-bold' },
+                        isLoggedIn ? 'A' : '?',
+                        isLoggedIn && isVip && React.createElement('span', { className: 'absolute -right-1 -bottom-1 px-1.5 py-0.5 rounded-full bg-amber-300 text-black text-[9px] font-black border border-black/20' }, 'VIP')
+                    ),
                     React.createElement('div', { className: 'flex-1' },
-                        React.createElement('h2', { className: 'text-lg font-bold text-white' }, 'Alex Chen'),
-                        React.createElement('p', { className: 'text-sm text-white/40' }, 'alex@example.com'),
-                        React.createElement('div', { className: 'flex items-center gap-2 mt-1' },
-                            React.createElement('span', { className: 'text-sm text-white/60' }, '💰 $28.50'),
-                            React.createElement('button', { onClick: () => setActivePanel('recharge'), className: 'text-xs text-indigo-400 font-medium' }, 'Refill')
+                        React.createElement('div', { className: 'flex items-center gap-2 flex-wrap' },
+                            React.createElement('h2', { className: 'text-lg font-bold text-white' }, isLoggedIn ? 'Alex Chen' : profileCopy.guest),
+                            isLoggedIn && isVip && React.createElement('span', { className: 'px-2 py-0.5 rounded-full bg-amber-300/15 border border-amber-300/40 text-amber-300 text-[10px] font-bold' }, profileCopy.vip)
+                        ),
+                        React.createElement('p', { className: 'text-sm text-white/40' }, isLoggedIn ? 'alex@example.com' : profileCopy.guestTip)
+                    ),
+                    React.createElement('button', { onClick: () => setLanguageOpen(true), className: 'px-3 py-1.5 rounded-full bg-white/10 text-white/70 text-xs font-medium active:scale-95' }, languageOptions.find(item => item.code === lang)?.short || 'EN')
+                ),
+                !isLoggedIn && React.createElement('div', { className: 'grid grid-cols-2 gap-2 mb-4' },
+                    React.createElement('button', { onClick: () => openAuth('login'), className: 'btn-primary py-2.5' }, authText.login),
+                    React.createElement('button', { onClick: () => openAuth('register'), className: 'btn-secondary py-2.5' }, authText.register)
+                ),
+                React.createElement('div', { className: 'rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-blue-500 to-indigo-500 relative min-h-[142px] p-4' },
+                    React.createElement('div', { className: 'relative z-10' },
+                        React.createElement('p', { className: 'text-base font-bold text-white' }, u.membershipActive),
+                        React.createElement('p', { className: 'text-xs text-white/80 mt-1' }, u.validUntil),
+                        React.createElement('button', { onClick: () => openProfilePurchase('membership'), className: 'mt-7 px-5 py-2.5 rounded-full bg-white text-indigo-600 text-sm font-bold active:scale-95 transition-transform' }, u.renewMembership)
+                    ),
+                    React.createElement('div', { className: 'absolute -right-8 bottom-[-26px] text-[118px] rotate-[-12deg] opacity-90' }, '👑'),
+                    React.createElement('div', { className: 'absolute right-4 top-5 text-2xl opacity-80' }, '✦')
+                ),
+                React.createElement('div', { className: 'rounded-2xl bg-[#242536] border border-white/8 p-4 mb-4' },
+                    React.createElement('div', { className: 'flex items-center justify-between mb-3' },
+                        React.createElement('p', { className: 'text-sm font-semibold text-white/70' }, u.myWallet),
+                        React.createElement('button', { onClick: () => openProfilePurchase('recharge'), className: 'px-4 py-2 rounded-full bg-white text-indigo-600 text-xs font-bold active:scale-95 transition-transform' }, u.refill)
+                    ),
+                    React.createElement('div', { className: 'h-px bg-white/12 mb-3' }),
+                    React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
+                        React.createElement('span', { className: 'text-xl' }, '🪙'),
+                        React.createElement('span', { className: 'text-2xl font-bold text-white' }, '0')
+                    ),
+                    React.createElement('div', { className: 'grid grid-cols-2 gap-2.5' },
+                        React.createElement('div', { className: 'rounded-xl bg-white/[0.055] p-3' },
+                            React.createElement('p', { className: 'text-xs text-white/45' }, u.totalRecharged),
+                            React.createElement('p', { className: 'text-lg font-bold text-white mt-1' }, '0')
+                        ),
+                        React.createElement('div', { className: 'rounded-xl bg-white/[0.055] p-3' },
+                            React.createElement('p', { className: 'text-xs text-white/45' }, u.totalConsumed),
+                            React.createElement('p', { className: 'text-lg font-bold text-white mt-1' }, '0')
                         )
                     ),
-                    React.createElement('button', { onClick: () => setLang(lang === 'en' ? 'zh' : 'en'), className: 'px-3 py-1.5 rounded-full bg-white/10 text-white/70 text-xs font-medium' }, lang.toUpperCase())
-                ),
-                React.createElement('div', { className: 'grid grid-cols-2 gap-2 mb-4' },
-                    React.createElement('button', { onClick: () => openAuth('login'), className: 'btn-primary py-2.5' }, 'Login'),
-                    React.createElement('button', { onClick: () => openAuth('register'), className: 'btn-secondary py-2.5' }, 'Register')
-                ),
-                React.createElement('div', { className: 'grid grid-cols-3 gap-2.5 mb-4' },
-                    React.createElement('button', { onClick: () => onPurchaseClick({ source: 'profile' }), className: 'glass-card p-3 text-left' },
-                        React.createElement('p', { className: 'text-lg' }, '👑'),
-                        React.createElement('p', { className: 'text-xs font-semibold text-white mt-1' }, 'Subscribe')
-                    ),
-                    React.createElement('button', { onClick: () => onPurchaseClick({ source: 'profile' }), className: 'glass-card p-3 text-left' },
-                        React.createElement('p', { className: 'text-lg' }, '💳'),
-                        React.createElement('p', { className: 'text-xs font-semibold text-white mt-1' }, 'Payment')
-                    ),
-                    React.createElement('button', { onClick: () => setActivePanel('recharge'), className: 'glass-card p-3 text-left' },
-                        React.createElement('p', { className: 'text-lg' }, '💰'),
-                        React.createElement('p', { className: 'text-xs font-semibold text-white mt-1' }, 'Recharge')
+                    React.createElement('div', { className: 'grid grid-cols-2 gap-2.5 mt-3' },
+                        React.createElement('div', { className: 'min-w-0' },
+                            React.createElement('p', { className: 'text-sm font-semibold text-white mb-2' }, u.recharges),
+                            React.createElement('button', { onClick: () => setActivePanel('rechargeHistory'), className: 'w-full text-left rounded-xl bg-white/[0.045] border border-white/5 p-2.5 active:scale-[0.98] transition-transform' },
+                                React.createElement('p', { className: 'text-xs font-semibold text-white truncate' }, rechargeRecords[0].title),
+                                React.createElement('div', { className: 'flex items-center justify-between gap-2 mt-1' },
+                                    React.createElement('span', { className: 'text-[10px] text-white/35 truncate' }, rechargeRecords[0].time),
+                                    React.createElement('span', { className: 'text-xs font-bold text-emerald-300' }, rechargeRecords[0].amount)
+                                )
+                            ),
+                            React.createElement('button', { onClick: () => setActivePanel('rechargeHistory'), className: 'w-full mt-2 py-2 rounded-xl bg-indigo-500/18 border border-indigo-300/20 text-xs font-bold text-indigo-100 active:scale-[0.98] transition-transform' }, baseLang === 'zh' ? '展开更多记录' : baseLang === 'ja' ? 'もっと見る' : baseLang === 'ko' ? '더 많은 기록' : 'View More')
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm font-semibold text-white mb-1' }, u.coinUsage),
+                            React.createElement('p', { className: 'text-xs text-white/45' }, u.noCoinUsage)
+                        )
                     )
                 ),
                 React.createElement('div', { className: 'grid grid-cols-2 gap-2.5 mb-4' },
@@ -841,19 +1366,23 @@
                     favs.map(d => React.createElement(DramaCard, { key: d.id, drama: d, onClick: onDramaClick, size: 'small' }))
                 ),
                 React.createElement('button', { onClick: () => setActivePanel('privacy'), className: 'w-full text-left py-2 text-sm text-white/30 hover:text-white/50 transition-colors' }, t('profile.privacy')),
+                isLoggedIn && React.createElement('button', {
+                    onClick: () => { setIsLoggedIn(false); setIsVip(false); alert(profileCopy.loggedOut); },
+                    className: 'w-full mt-4 mb-2 py-3 rounded-2xl bg-white/[0.055] border border-white/10 text-sm font-semibold text-red-300 active:scale-[0.98] transition-transform'
+                }, profileCopy.logout),
                 authOpen && React.createElement('div', { className: 'fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-end justify-center mobile-fixed' },
                     React.createElement('div', { className: 'w-full rounded-t-3xl bg-[#111119] border-t border-white/10 p-5 animate-slide-up' },
                         React.createElement('div', { className: 'flex items-center justify-between mb-4' },
-                            React.createElement('h2', { className: 'text-lg font-bold text-white' }, authMode === 'login' ? 'Login' : 'Create Account'),
+                            React.createElement('h2', { className: 'text-lg font-bold text-white' }, authMode === 'login' ? authText.login : authText.create),
                             React.createElement('button', { onClick: () => setAuthOpen(false), className: 'text-white/50 text-xl' }, '✕')
                         ),
                         React.createElement('div', { className: 'flex p-1 rounded-full bg-white/[0.06] mb-4' },
-                            React.createElement('button', { onClick: () => setAuthMode('login'), className: `flex-1 py-2 rounded-full text-xs font-semibold ${authMode === 'login' ? 'bg-white text-black' : 'text-white/55'}` }, 'Login'),
-                            React.createElement('button', { onClick: () => setAuthMode('register'), className: `flex-1 py-2 rounded-full text-xs font-semibold ${authMode === 'register' ? 'bg-white text-black' : 'text-white/55'}` }, 'Register')
+                            React.createElement('button', { onClick: () => setAuthMode('login'), className: `flex-1 py-2 rounded-full text-xs font-semibold ${authMode === 'login' ? 'bg-white text-black' : 'text-white/55'}` }, authText.login),
+                            React.createElement('button', { onClick: () => setAuthMode('register'), className: `flex-1 py-2 rounded-full text-xs font-semibold ${authMode === 'register' ? 'bg-white text-black' : 'text-white/55'}` }, authText.register)
                         ),
-                        React.createElement('button', { onClick: () => { alert('Google account connected.'); setAuthOpen(false); }, className: 'w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black text-sm font-semibold mb-3 active:scale-[0.98] transition-transform' },
+                        React.createElement('button', { onClick: () => { alert(mt('googleConnected')); setAuthOpen(false); }, className: 'w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black text-sm font-semibold mb-3 active:scale-[0.98] transition-transform' },
                             React.createElement('span', { className: 'w-5 h-5 rounded-full bg-[#4285F4] text-white flex items-center justify-center text-xs font-bold' }, 'G'),
-                            React.createElement('span', null, authMode === 'login' ? 'Continue with Google' : 'Sign up with Google')
+                            React.createElement('span', null, authMode === 'login' ? authText.googleLogin : authText.googleRegister)
                         ),
                         React.createElement('div', { className: 'flex items-center gap-3 mb-3' },
                             React.createElement('span', { className: 'h-px flex-1 bg-white/10' }),
@@ -861,12 +1390,30 @@
                             React.createElement('span', { className: 'h-px flex-1 bg-white/10' })
                         ),
                         React.createElement('div', { className: 'space-y-3' },
-                            authMode === 'register' && React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'Username' }),
-                            React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'Email' }),
-                            React.createElement('input', { type: 'password', className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: 'Password' })
+                            authMode === 'register' && React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: authText.username }),
+                            React.createElement('input', { className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: authText.email }),
+                            React.createElement('input', { type: 'password', className: 'w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white outline-none placeholder:text-white/30', placeholder: authText.password })
                         ),
-                        React.createElement('button', { onClick: () => { alert(authMode === 'login' ? 'Login submitted.' : 'Registration submitted.'); setAuthOpen(false); }, className: 'btn-primary w-full mt-4 py-3' }, authMode === 'login' ? 'Login' : 'Register'),
-                        React.createElement('button', { onClick: () => alert(authMode === 'login' ? 'Password recovery opened.' : 'Terms opened.'), className: 'w-full text-center text-xs text-white/35 mt-3' }, authMode === 'login' ? 'Forgot password?' : 'By registering, you agree to our terms.')
+                        React.createElement('button', { onClick: () => { setIsLoggedIn(true); setIsVip(authMode === 'login' ? isVip : false); alert(authMode === 'login' ? profileCopy.loggedIn : profileCopy.registered); setAuthOpen(false); }, className: 'btn-primary w-full mt-4 py-3' }, authMode === 'login' ? authText.login : authText.register),
+                        React.createElement('button', { onClick: () => alert(mt('opened')), className: 'w-full text-center text-xs text-white/35 mt-3' }, authMode === 'login' ? mt('forgot') : mt('terms'))
+                    )
+                ),
+                languageOpen && React.createElement('div', { className: 'fixed inset-0 z-[85] bg-black/70 backdrop-blur-sm mobile-fixed flex items-end' },
+                    React.createElement('div', { className: 'w-full max-h-[78vh] overflow-y-auto rounded-t-3xl bg-[#09090d] border-t border-white/10 p-5 pb-6 safe-area-bottom animate-slide-up' },
+                        React.createElement('div', { className: 'flex items-center justify-between mb-3' },
+                            React.createElement('h2', { className: 'text-2xl font-bold text-white' }, mt('language')),
+                            React.createElement('button', { onClick: () => setLanguageOpen(false), className: 'w-9 h-9 rounded-full bg-white/10 text-white/70 text-lg' }, '×')
+                        ),
+                        languageOptions.map(item =>
+                            React.createElement('button', {
+                                key: item.code,
+                                onClick: () => { setLang(item.code); setLanguageOpen(false); },
+                                className: `w-full flex items-center justify-between py-5 border-b border-white/8 text-left active:bg-white/[0.04] ${lang === item.code ? 'text-amber-300' : 'text-white'}`
+                            },
+                                React.createElement('span', { className: 'text-lg' }, item.name),
+                                lang === item.code && React.createElement('span', { className: 'text-xl' }, '✓')
+                            )
+                        )
                     )
                 ),
                 renderPanel()
@@ -878,26 +1425,44 @@
             const [tab, setTab] = useState('home');
             const [detail, setDetail] = useState(null);
             const [purchase, setPurchase] = useState(null);
+            const [isLoggedIn, setIsLoggedIn] = useState(true);
+            const [isVip, setIsVip] = useState(true);
+            const [unlockedMap, setUnlockedMap] = useState({});
 
-            const handleDramaClick = (d) => setDetail(d);
+            const hydrateDrama = (d) => d ? { ...d, unlockedEpisodes: unlockedMap[d.id] || d.unlockedEpisodes } : d;
+            const handleDramaClick = (d) => setDetail(hydrateDrama(d));
             const handleClose = () => setDetail(null);
-            const handlePurchaseOpen = ({ drama, episode } = {}) => {
-                setPurchase({ open: true, drama: drama || detail || mockDramas[0], episode: episode || null });
+            const handlePurchaseOpen = ({ drama, episode, source, intent } = {}) => {
+                const targetDrama = hydrateDrama(drama || detail || mockDramas[0]);
+                setPurchase({ open: true, drama: targetDrama, episode: episode || null, source: source || 'player', intent: intent || 'unlock' });
             };
             const handlePurchaseClose = () => setPurchase(null);
+            const handlePaid = (option) => {
+                if (option?.group === 'vip') {
+                    setIsLoggedIn(true);
+                    setIsVip(true);
+                }
+                if (purchase?.drama && (option?.id === 'full' || option?.group === 'vip' || option?.group === 'unlock')) {
+                    setUnlockedMap(prev => ({ ...prev, [purchase.drama.id]: purchase.drama.totalEpisodes }));
+                    setDetail(current => current && current.id === purchase.drama.id ? { ...current, unlockedEpisodes: current.totalEpisodes } : current);
+                }
+            };
 
             return React.createElement(LangProvider, null,
                 React.createElement('div', { className: 'relative h-full mobile-shell bg-[#0B0B10] overflow-hidden flex flex-col' },
                     tab === 'home' && React.createElement(HomePage, { onDramaClick: handleDramaClick }),
                     tab === 'foryou' && React.createElement(ForYouPage, { onDramaClick: handleDramaClick, onPurchaseClick: handlePurchaseOpen }),
-                    tab === 'profile' && React.createElement(ProfilePage, { onDramaClick: handleDramaClick, onPurchaseClick: handlePurchaseOpen }),
+                    tab === 'profile' && React.createElement(ProfilePage, { onDramaClick: handleDramaClick, onPurchaseClick: handlePurchaseOpen, isLoggedIn, setIsLoggedIn, isVip, setIsVip }),
                     React.createElement(BottomNav, { activeTab: tab, onTabChange: setTab, transparent: tab === 'foryou' }),
                     detail && React.createElement(DramaPlayerPage, { drama: detail, onClose: handleClose, onPurchaseClick: handlePurchaseOpen }),
                     React.createElement(PurchaseSheet, {
                         open: !!purchase,
                         drama: purchase?.drama,
                         episode: purchase?.episode,
-                        onClose: handlePurchaseClose
+                        source: purchase?.source,
+                        intent: purchase?.intent,
+                        onClose: handlePurchaseClose,
+                        onPaid: handlePaid
                     })
                 )
             );
@@ -907,3 +1472,4 @@
     </script>
 </body>
 </html>
+
